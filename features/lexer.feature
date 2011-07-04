@@ -60,7 +60,7 @@ Feature: Lexing AMI
     When the buffer is lexed
 
     Then the protocol should have lexed without syntax errors
-    And the first message received should have the key "System uptime" with value "46 minutes, 30 seconds"
+    And the first message received should have a key "System uptime" with value "46 minutes, 30 seconds"
 
   Scenario: Lexing a Response:Follows section which has a colon not on the first line
     Given a new lexer

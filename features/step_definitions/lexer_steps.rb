@@ -48,7 +48,7 @@ ActionID: 123123\r
   @lexer << multi_line_response
 end
 
-Given "a multi-line Response:Follows response simulating uptime" do |method_name|
+Given "a multi-line Response:Follows response simulating uptime" do
   uptime_response = "Response: Follows\r
 Privilege: Command\r
 System uptime: 46 minutes, 30 seconds\r
@@ -163,7 +163,7 @@ Then "the version should be set to $version" do |version|
   @lexer.ami_version.should eql(version.to_f)
 end
 
-Then /^the ([\w\d]*) message received should have (a|the) key "([^\"]*)" with value "([^\"]*)"$/ do |ordered,key,value|
+Then /^the ([\w\d]*) message received should have a key "([^\"]*)" with value "([^\"]*)"$/ do |ordered,key,value|
   ordered = ordered[/^(\d+)\w+$/, 1].to_i - 1
   @lexer.received_messages[ordered][key].should eql(value)
 end

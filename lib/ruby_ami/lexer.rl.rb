@@ -153,7 +153,7 @@ module RubyAMI
     ##
     # Called after a response or event has been successfully parsed.
     #
-    # @param [ManagerInterfaceResponse, ManagerInterfaceEvent] message The message just received
+    # @param [Response, Event] message The message just received
     #
     def message_received(message)
       raise NotImplementedError, "Must be implemented in subclass!"
@@ -162,7 +162,7 @@ module RubyAMI
     ##
     # Called when there is an Error: stanza on the socket. Could be caused by executing an unrecognized command, trying
     # to originate into an invalid priority, etc. Note: many errors' responses are actually tightly coupled to a
-    # ManagerInterfaceEvent which comes directly after it. Often the message will say something like "Channel status
+    # Event which comes directly after it. Often the message will say something like "Channel status
     # will follow".
     #
     # @param [String] reason The reason given in the Message: header for the error stanza.
@@ -181,15 +181,15 @@ module RubyAMI
     end
 
     def init_success
-      @current_message = ManagerInterfaceResponse.new
+      @current_message = Response.new
     end
 
     def init_response_follows
-      @current_message = ManagerInterfaceResponse.new
+      @current_message = Response.new
     end
 
     def init_error
-      @current_message = ManagerInterfaceError.new()
+      @current_message = Error.new()
     end
 
     def version_starts
@@ -208,7 +208,7 @@ module RubyAMI
     def event_name_stops
       event_name = @data[@event_name_start...@current_pointer]
       @event_name_start = nil
-      @current_message = ManagerInterfaceEvent.new(event_name)
+      @current_message = Event.new(event_name)
     end
 
     def key_starts
@@ -274,7 +274,7 @@ module RubyAMI
 
     def immediate_response_stops
       message = @data[@immediate_response_start...(@current_pointer -1)]
-      message_received ManagerInterfaceResponse.from_immediate_response(message)
+      message_received Response.from_immediate_response(message)
     end
 
     ##

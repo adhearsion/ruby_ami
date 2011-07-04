@@ -6,6 +6,7 @@
   active_support/hash_with_indifferent_access
 
   uuidtools
+  ruby_ami/metaprogramming
 }.each { |f| require f }
 
 module RubyAMI
