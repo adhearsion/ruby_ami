@@ -27,7 +27,7 @@ class MyAMIClient < RubyAMI::Client
   end
 end
 
-EM.run { MyAMIClient.run }
+EM.run { MyAMIClient.run '127.0.0.1', 5038, 'admin', 'password' }
 ```
 
 ## Links:
