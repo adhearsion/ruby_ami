@@ -1,5 +1,9 @@
-require "ruby_ami/version"
+%w{
+  active_support/dependencies/autoload
+}.each { |f| require f }
 
-module RubyAmi
-  # Your code goes here...
+module RubyAMI
+  extend ActiveSupport::Autoload
+
+  autoload :Version
 end
