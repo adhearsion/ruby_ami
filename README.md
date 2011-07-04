@@ -4,6 +4,32 @@ RubyAMI is an AMI client library in Ruby and based on EventMachine with the sole
 ## Installation
     gem install ruby_ami
 
+## Usage
+```ruby
+require 'ruby_ami'
+
+class MyAMIClient < RubyAMI::Client
+  def on_connect
+    puts "AMI Connected successfully"
+    write_action "Originate", ...some options...
+  end
+
+  def handle_event(event)
+    puts "Received an AMI event: #{event}"
+  end
+
+  def handle_error(error)
+    ...similar here...
+  end
+
+  def handle_response(response)
+    ...similar here...
+  end
+end
+
+EM.run { MyAMIClient.run }
+```
+
 ## Links:
 * [Source](https://github.com/adhearsion/ruby_ami)
 * [Documentation](http://rdoc.info/github/adhearsion/ruby_ami/master/frames)
