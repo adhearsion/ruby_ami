@@ -21,7 +21,7 @@ Cucumber::Rake::Task.new(:features) do |t|
   t.cucumber_opts = "features --format pretty"
 end
 
-task :default => [:spec, :fixtures]
+task :default => [:spec, :features]
 task :ci => ['ci:setup:rspec', :spec, 'ci:setup:cucumber', :features]
 
 require 'yard'
