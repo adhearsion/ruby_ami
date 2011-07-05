@@ -156,7 +156,6 @@ module RubyAMI
     # @param [Response, Event] message The message just received
     #
     def message_received(message)
-      raise NotImplementedError, "Must be implemented in subclass!"
       @delegate.message_received message
     end
 
@@ -168,8 +167,6 @@ module RubyAMI
     #
     # @param [String] reason The reason given in the Message: header for the error stanza.
     #
-    def error_received(reason)
-      raise NotImplementedError, "Must be implemented in subclass!"
     def error_received(message)
       @delegate.error_received message
     end
@@ -180,7 +177,6 @@ module RubyAMI
     #
     # @param [String] ignored_chunk The offending text which caused the syntax error.
     def syntax_error_encountered(ignored_chunk)
-      raise NotImplementedError, "Must be implemented in subclass!"
       @delegate.syntax_error_encountered ignored_chunk
     end
 
