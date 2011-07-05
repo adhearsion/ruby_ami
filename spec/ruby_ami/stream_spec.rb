@@ -8,6 +8,10 @@ module RubyAMI
         @server ||= MockServer.new
         @server.receive_data data, self
       end
+
+      def send_data(data)
+        super data.gsub("\n", "\r\n")
+      end
     end
 
     def mocked_server(times = nil, &block)
@@ -53,7 +57,6 @@ module RubyAMI
     it 'sends events to the client when the stream is ready' do
       @client = mock
       @client.expects(:message_received).with do |e|
-        p "Getting event: #{e}"
         EM.stop
         e.should be_a Event
         e.name.should == 'Hangup'

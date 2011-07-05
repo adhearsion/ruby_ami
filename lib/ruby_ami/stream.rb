@@ -20,8 +20,11 @@ module RubyAMI
     end
 
     def receive_data(data)
-      p "Stream receiving data: #{data}"
       @lexer << data
+    end
+
+    def message_received(m)
+      @delegate.message_received m
     end
   end
 end
