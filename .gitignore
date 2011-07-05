@@ -7,4 +7,5 @@ pkg/*
 .yardoc
 doc
 spec/reports
+features/reports
 vendor
