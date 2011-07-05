@@ -6,6 +6,8 @@
   active_support/hash_with_indifferent_access
 
   uuidtools
+  eventmachine
+
   ruby_ami/metaprogramming
 }.each { |f| require f }
 
@@ -13,10 +15,12 @@ module RubyAMI
   extend ActiveSupport::Autoload
 
   autoload :Action
+  autoload :Client
   autoload :Error
   autoload :Event
   autoload :FutureResource
   autoload :Lexer
   autoload :Response
+  autoload :Stream
   autoload :Version
 end
