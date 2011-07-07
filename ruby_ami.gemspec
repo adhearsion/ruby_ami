@@ -8,8 +8,8 @@ Gem::Specification.new do |s|
   s.authors     = ["Ben Langfeld"]
   s.email       = ["ben@langfeld.me"]
   s.homepage    = ""
-  s.summary     = %q{TODO: Write a gem summary}
-  s.description = %q{TODO: Write a gem description}
+  s.summary     = %q{Futzing with AMI so you don't have to}
+  s.description = %q{A Ruby client library for the Asterisk Management Interface build on eventmachine.}
 
   s.rubyforge_project = "ruby_ami"
 
