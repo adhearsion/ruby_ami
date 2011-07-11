@@ -4,9 +4,9 @@ module RubyAMI
       EM.connect host, port, self, client, username, pass
     end
 
-    def initialize(delegate, username, password)
+    def initialize(client, username, password)
       super()
-      @delegate, @username, @password = delegate, username, password
+      @client, @username, @password = client, username, password
       @lexer = Lexer.new self
     end
 
@@ -29,7 +29,7 @@ module RubyAMI
     end
 
     def message_received(m)
-      @delegate.message_received m
+      @client.message_received m
     end
 
     # Called by EM when the connection is closed
