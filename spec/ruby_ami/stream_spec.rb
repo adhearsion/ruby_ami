@@ -46,6 +46,12 @@ module RubyAMI
     end
 
     describe "after connection" do
+      it "should be started" do
+        mocked_server(1) do |val, server|
+          @stream.started?.should be_true
+        end
+      end
+
       it "logs in" do
         mocked_server(1) do |val, _|
           EM.stop
@@ -73,5 +79,18 @@ Cause: 0
       end
     end
 
+
+    it 'puts itself in the stopped state and calls @client.unbind when unbound' do
+      @client = mock
+      @client.expects(:unbind).at_least_once
+
+      started = false
+      mocked_server(1) do |val, server|
+        EM.stop
+        @stream.stopped?.should be false
+        @stream.unbind
+        @stream.stopped?.should be true
+      end
+    end
   end
 end
