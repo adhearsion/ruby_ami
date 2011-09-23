@@ -7,6 +7,7 @@
 
   uuidtools
   eventmachine
+  future-resource
 
   ruby_ami/metaprogramming
 }.each { |f| require f }
@@ -18,7 +19,6 @@ module RubyAMI
   autoload :Client
   autoload :Error
   autoload :Event
-  autoload :FutureResource
   autoload :Lexer
   autoload :Response
   autoload :Stream

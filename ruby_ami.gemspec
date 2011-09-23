@@ -21,6 +21,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency %q<activesupport>, [">= 3.0.9"]
   s.add_runtime_dependency %q<uuidtools>, [">= 0"]
   s.add_runtime_dependency %q<eventmachine>, [">= 0"]
+  s.add_runtime_dependency %q<future-resource>, [">= 0"]
 
   s.add_development_dependency %q<bundler>, ["~> 1.0.0"]
   s.add_development_dependency %q<rspec>, ["~> 2.3.0"]
