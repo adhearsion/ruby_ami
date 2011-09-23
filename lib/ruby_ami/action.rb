@@ -8,11 +8,12 @@ module RubyAMI
     CAUSAL_EVENT_NAMES = %w[queuestatus sippeers iaxpeers parkedcalls dahdishowchannels coreshowchannels
                             dbget status agents konferencelist] unless defined? CAUSAL_EVENT_NAMES
 
-    def initialize(name, headers = {})
+    def initialize(name, headers = {}, &block)
       @name      = name.to_s.downcase.freeze
       @headers   = headers.stringify_keys.freeze
       @action_id = UUIDTools::UUID.random_create
       @future_resource = FutureResource.new
+      @response_callback = block
     end
 
     def replies_with_action_id?
@@ -72,7 +73,9 @@ module RubyAMI
     # object.
     #
     def response
-      future_resource.resource
+      future_resource.resource.tap do |response|
+        @response_callback.call response if @response_callback
+      end
     end
 
     ##

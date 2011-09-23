@@ -44,5 +44,22 @@ module RubyAMI
       Action.new("Ping").to_s.should =~ /^Action: Ping\r\nActionID: [\w-]+\r\n\r\n$/i
       Action.new("ParkedCalls").to_s.should =~ /^Action: ParkedCalls\r\nActionID: [\w-]+\r\n\r\n$/i
     end
+
+    describe "a block passed to #new" do
+      subject do
+        Action.new("Ping") do |response|
+          @callback_called = true
+          @callback_value = response
+        end
+      end
+
+      it "should be called when its response is set" do
+        response = Response.new
+        subject.future_resource.resource = response
+        subject.response
+        @callback_called.should be_true
+        @callback_value.should == response
+      end
+    end
   end # Action
 end # RubyAMI

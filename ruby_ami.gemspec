@@ -35,4 +35,5 @@ Gem::Specification.new do |s|
   s.add_development_dependency %q<i18n>, [">= 0"]
   s.add_development_dependency %q<simplecov>, [">= 0"]
   s.add_development_dependency %q<simplecov-rcov>, [">= 0"]
+  s.add_development_dependency %q<countdownlatch>, [">= 1.0.0"]
 end

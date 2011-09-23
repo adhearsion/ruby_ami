@@ -26,7 +26,7 @@ module RubyAMI
         # Mocked server
         EventMachine::start_server '127.0.0.1', 12345, ServerMock
 
-        # Blather::Stream connection
+        # Stream connection
         EM.connect('127.0.0.1', 12345, Stream, @client, 'username', 'pass') { |c| @stream = c }
       }
     end
@@ -53,9 +53,38 @@ module RubyAMI
       end
 
       it "logs in" do
-        mocked_server(1) do |val, _|
+        pending
+        mocked_server(1) do |val, server|
           EM.stop
+          latch = CountDownLatch.new 1
+          @client.expects(:login_callback).returns(lambda { latch.countdown! })
           val.should == Action.new('Login', 'Username' => 'username', 'Secret' => 'pass').to_s
+          server.send_data <<-RESPONSE
+Response: Success
+ActionID: action_id
+Message: Authentication accepted
+
+          RESPONSE
+          latch.wait(5).should be_true
+          p @stream.login_action.instance_variable_get :'@response_callback'
+          @stream.ready?.should be_true
+          # val.should == @stream.login_action.to_s
+          # @stream.login_actio
+        end
+      end
+
+      it "logs in" do
+        pending
+        mocked_server(1) do |val, server|
+          action = Action.new('Login', 'Username' => 'username', 'Secret' => 'pass')
+          val.should == action.to_s
+          @stream.ready?.should == false
+          server.send_data <<-RESPONSE
+Response: Success
+ActionID: action_id
+Message: Authentication accepted
+
+          RESPONSE
         end
       end
     end
@@ -79,6 +108,23 @@ Cause: 0
       end
     end
 
+    it 'sends responses to the client when the stream is ready' do
+      @client = mock
+      @client.expects(:message_received).with do |r|
+        EM.stop
+        r.should be_a Response
+        r['ActionID'].should == 'ee33eru2398fjj290'
+      end
+
+      mocked_server(1) do |val, server|
+        server.send_data <<-EVENT
+Response: Success
+ActionID: ee33eru2398fjj290
+Message: Authentication accepted
+
+        EVENT
+      end
+    end
 
     it 'puts itself in the stopped state and calls @client.unbind when unbound' do
       @client = mock
