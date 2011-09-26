@@ -55,8 +55,7 @@ module RubyAMI
 
       it "should be called when its response is set" do
         response = Response.new
-        subject.future_resource.resource = response
-        subject.response
+        subject.response = response
         @callback_called.should be_true
         @callback_value.should == response
       end
