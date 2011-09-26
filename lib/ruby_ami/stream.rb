@@ -23,7 +23,11 @@ module RubyAMI
 
     def post_init
       @state = :started
-      @login_action = send_action("Login", "Username" => @username, "Secret" => @password)
+      @login_action = send_action "Login", "Username" => @username, "Secret" => @password do |action|
+        @logger.debug "Handling login response..."
+        @state = :ready
+        @client.on_stream_ready self
+      end
     end
 
     def send_action(action_name, headers = {}, &block)
@@ -40,7 +44,12 @@ module RubyAMI
 
     def message_received(message)
       @logger.debug "[RECV] #{message.inspect}"
-      @client.message_received message
+      if message.action_id == @login_action.action_id
+        @logger.debug "Login response received: #{message.inspect}"
+        @login_action.response = message
+      else
+        @client.message_received message
+      end
     end
 
     # Called by EM when the connection is closed

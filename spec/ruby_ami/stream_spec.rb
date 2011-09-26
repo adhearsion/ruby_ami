@@ -2,7 +2,8 @@ require 'spec_helper'
 
 module RubyAMI
   describe Stream do
-    class MockServer; end
+    MockServer = Class.new
+
     module ServerMock
       def receive_data(data)
         @server ||= MockServer.new
@@ -53,35 +54,16 @@ module RubyAMI
       end
 
       it "logs in" do
-        pending
+        @client = mock
+        @client.expects(:on_stream_ready).with do |r|
+          r.should be_a Stream
+          r.should be_ready
+        end
         mocked_server(1) do |val, server|
-          EM.stop
-          latch = CountDownLatch.new 1
-          @client.expects(:login_callback).returns(lambda { latch.countdown! })
           val.should == Action.new('Login', 'Username' => 'username', 'Secret' => 'pass').to_s
           server.send_data <<-RESPONSE
 Response: Success
-ActionID: action_id
-Message: Authentication accepted
-
-          RESPONSE
-          latch.wait(5).should be_true
-          p @stream.login_action.instance_variable_get :'@response_callback'
-          @stream.ready?.should be_true
-          # val.should == @stream.login_action.to_s
-          # @stream.login_actio
-        end
-      end
-
-      it "logs in" do
-        pending
-        mocked_server(1) do |val, server|
-          action = Action.new('Login', 'Username' => 'username', 'Secret' => 'pass')
-          val.should == action.to_s
-          @stream.ready?.should == false
-          server.send_data <<-RESPONSE
-Response: Success
-ActionID: action_id
+ActionID: actionid
 Message: Authentication accepted
 
           RESPONSE
