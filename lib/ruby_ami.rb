@@ -8,6 +8,7 @@
   uuidtools
   eventmachine
   future-resource
+  logger
 
   ruby_ami/metaprogramming
 }.each { |f| require f }
