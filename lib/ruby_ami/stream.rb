@@ -1,14 +1,14 @@
 module RubyAMI
   class Stream < EventMachine::Connection
-    def self.start(client, host, port, username, pass, logger = nil)
-      EM.connect host, port, self, client, username, pass, logger
+    def self.start(client, host, port, username, pass, events, logger = nil)
+      EM.connect host, port, self, client, username, pass, events, logger
     end
 
     attr_reader :login_action
 
-    def initialize(client, username, password, logger = nil)
+    def initialize(client, username, password, events = true, logger = nil)
       super()
-      @client, @username, @password = client, username, password
+      @client, @username, @password, @events = client, username, password, events.nil? ? true : events
       @logger = logger || Logger.new($stdout)
       @logger.level = Logger::DEBUG
       @logger.debug "Starting up..."
@@ -23,7 +23,7 @@ module RubyAMI
 
     def post_init
       @state = :started
-      @login_action = send_action "Login", "Username" => @username, "Secret" => @password do |action|
+      @login_action = send_action "Login", "Username" => @username, "Secret" => @password, 'Events' => @events ? 'On' : 'Off' do |action|
         @logger.debug "Handling login response..."
         @state = :ready
         @client.on_stream_ready self

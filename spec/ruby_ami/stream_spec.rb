@@ -28,7 +28,7 @@ module RubyAMI
         EventMachine::start_server '127.0.0.1', 12345, ServerMock
 
         # Stream connection
-        EM.connect('127.0.0.1', 12345, Stream, @client, 'username', 'pass') { |c| @stream = c }
+        EM.connect('127.0.0.1', 12345, Stream, @client, 'username', 'pass', @events) { |c| @stream = c }
       }
     end
 
@@ -41,9 +41,10 @@ module RubyAMI
         parms[3].should == client
         parms[4].should == 'username'
         parms[5].should == 'password'
+        parms[6].should == true
       end
 
-      Stream.start client, 'example.com', 1234, 'username', 'password'
+      Stream.start client, 'example.com', 1234, 'username', 'password', true
     end
 
     describe "after connection" do
@@ -60,13 +61,34 @@ module RubyAMI
           r.should be_ready
         end
         mocked_server(1) do |val, server|
-          val.should == Action.new('Login', 'Username' => 'username', 'Secret' => 'pass').to_s
+          val.should == Action.new('Login', 'Username' => 'username', 'Secret' => 'pass', 'Events' => 'On').to_s
           server.send_data <<-RESPONSE
 Response: Success
 ActionID: actionid
 Message: Authentication accepted
 
           RESPONSE
+        end
+      end
+
+      describe "with events turned off" do
+        before { @events = false }
+
+        it "logs in" do
+          @client = mock
+          @client.expects(:on_stream_ready).with do |r|
+            r.should be_a Stream
+            r.should be_ready
+          end
+          mocked_server(1) do |val, server|
+            val.should == Action.new('Login', 'Username' => 'username', 'Secret' => 'pass', 'Events' => 'Off').to_s
+            server.send_data <<-RESPONSE
+Response: Success
+ActionID: actionid
+Message: Authentication accepted
+
+            RESPONSE
+          end
         end
       end
     end
