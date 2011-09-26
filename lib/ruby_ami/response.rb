@@ -14,7 +14,6 @@ module RubyAMI
     end
 
     attr_accessor :action,
-                  :action_id,
                   :text_body  # For "Response: Follows" sections
     attr_reader   :events
 
@@ -36,6 +35,10 @@ module RubyAMI
 
     def []=(key,value)
       @headers[key] = value
+    end
+
+    def action_id
+      @headers['ActionID']
     end
   end
 end # RubyAMI
