@@ -24,11 +24,10 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency %q<future-resource>, [">= 0"]
 
   s.add_development_dependency %q<bundler>, ["~> 1.0.0"]
-  s.add_development_dependency %q<rspec>, ["~> 2.3.0"]
+  s.add_development_dependency %q<rspec>, [">= 2.5.0"]
   s.add_development_dependency %q<cucumber>, [">= 0"]
   s.add_development_dependency %q<ci_reporter>, [">= 1.6.3"]
   s.add_development_dependency %q<yard>, ["~> 0.6.0"]
-  s.add_development_dependency %q<bluecloth>, [">= 0"]
   s.add_development_dependency %q<rcov>, [">= 0"]
   s.add_development_dependency %q<rake>, [">= 0"]
   s.add_development_dependency %q<mocha>, [">= 0"]
@@ -36,4 +35,5 @@ Gem::Specification.new do |s|
   s.add_development_dependency %q<simplecov>, [">= 0"]
   s.add_development_dependency %q<simplecov-rcov>, [">= 0"]
   s.add_development_dependency %q<countdownlatch>, [">= 1.0.0"]
+  s.add_development_dependency %q<guard-rspec>
 end
