@@ -24,11 +24,13 @@ module RubyAMI
       EventMachine::run {
         EM.add_timer(0.5) { EM.stop if EM.reactor_running? }
 
+        port = 50000 - rand(1000)
+
         # Mocked server
-        EventMachine::start_server '127.0.0.1', 12345, ServerMock
+        EventMachine::start_server '127.0.0.1', port, ServerMock
 
         # Stream connection
-        EM.connect('127.0.0.1', 12345, Stream, @client, 'username', 'pass', @events) { |c| @stream = c }
+        EM.connect('127.0.0.1', port, Stream, @client, 'username', 'pass', @events) { |c| @stream = c }
       }
     end
 
