@@ -3,17 +3,16 @@ module RubyAMI
   # Each time AMI#send_action is invoked, a new Action is instantiated.
   #
   class Action
-    attr_reader :name, :headers, :future_resource, :action_id
+    attr_reader :name, :headers, :future_resource, :action_id, :response_resource
 
     CAUSAL_EVENT_NAMES = %w[queuestatus sippeers iaxpeers parkedcalls dahdishowchannels coreshowchannels
                             dbget status agents konferencelist] unless defined? CAUSAL_EVENT_NAMES
 
-    def initialize(name, headers = {}, &block)
+    def initialize(name, response_resource, headers = {})
       @name       = name.to_s.downcase.freeze
       @headers    = headers.stringify_keys.freeze
       @action_id  = UUIDTools::UUID.random_create
-      @response   = FutureResource.new
-      @response_callback = block
+      @response_resource = response_resource
     end
 
     def replies_with_action_id?
@@ -65,20 +64,6 @@ module RubyAMI
           @headers.map { |(key,value)| "#{key}: #{value}" }.join("\r\n") +
           (@headers.any? ? "\r\n\r\n" : "\r\n")
       )
-    end
-
-    ##
-    # If the response has simply not been received yet from Asterisk, the calling Thread will block until it comes
-    # in. Once the response comes in, subsequent calls immediately return a reference to the ManagerInterfaceResponse
-    # object.
-    #
-    def response
-      @response.resource
-    end
-
-    def response=(other)
-      @response.resource = other
-      @response_callback.call response if @response_callback
     end
 
     ##

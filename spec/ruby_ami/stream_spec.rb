@@ -30,23 +30,25 @@ module RubyAMI
         EventMachine::start_server '127.0.0.1', port, ServerMock
 
         # Stream connection
-        EM.connect('127.0.0.1', port, Stream, @client, 'username', 'pass', @events) { |c| @stream = c }
+        #EM.connect('127.0.0.1', port, Stream, @client, 'username', 'pass', @events) { |c| @stream = c }
+        options = {:username => 'username', :password => 'pass', :events => @events}
+        EM.connect('127.0.0.1', port, Stream, options) {|c| @stream = c}
       }
     end
 
     it 'can be started' do
-      client = mock
+      #client = mock
       EM.expects(:connect).with do |*parms|
         parms[0].should == 'example.com'
         parms[1].should == 1234
         parms[2].should == Stream
-        parms[3].should == client
-        parms[4].should == 'username'
-        parms[5].should == 'password'
-        parms[6].should == true
+        parms[3].should == {:username => 'username', :password => 'password', :events => true}
+#        parms[4].should == 'username'
+#        parms[5].should == 'password'
+#        parms[6].should == true
       end
 
-      Stream.start client, 'example.com', 1234, 'username', 'password', true
+      Stream.start 'example.com', 1234, {:username => 'username', :password => 'password', :events => true}
     end
 
     describe "after connection" do

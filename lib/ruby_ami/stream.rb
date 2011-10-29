@@ -1,15 +1,18 @@
 module RubyAMI
   class Stream < EventMachine::Connection
-    def self.start(client, host, port, username, pass, events, logger = nil)
-      EM.connect host, port, self, client, username, pass, events, logger
+#    def self.start(client, host, port, username, pass, events, logger = nil)
+#      EM.connect host, port, self, client, username, pass, events, logger
+    def self.start(host, port, options)
+      EM.connect host, port, self, options
     end
 
     attr_reader :login_action
 
-    def initialize(client, username, password, events = true, logger = nil)
+#    def initialize(client, username, password, events = true, logger = nil)
+    def initialize(options)
       super()
-      @client, @username, @password, @events = client, username, password, events.nil? ? true : events
-      @logger = logger || Logger.new($stdout)
+      @client, @username, @password, @events = options[:client], options[:username], options[:password], options[:events].nil? ? true : options[:events]
+      @logger = options[:logger] || Logger.new($stdout)
       @logger.level = Logger::DEBUG
       @logger.debug "Starting up..."
       @lexer = Lexer.new self
@@ -30,11 +33,11 @@ module RubyAMI
       end
     end
 
-    def send_action(action_name, headers = {}, &block)
-      Action.new(action_name, headers, &block).tap do |action|
-        @logger.debug "[SEND] #{action.to_s}"
-        send_data action.to_s
-      end
+    def send_action(action)
+#      Action.new(action_name, headers, &block).tap do |action|
+#        @logger.debug "[SEND] #{action.to_s}"
+#        send_data action.to_s
+#      end
     end
 
     def receive_data(data)
@@ -48,7 +51,7 @@ module RubyAMI
         @logger.debug "Login response received: #{message.inspect}"
         @login_action.response = message
       else
-        @client.message_received message
+        #@client.message_received message
       end
     end
 
@@ -56,7 +59,7 @@ module RubyAMI
     # @private
     def unbind
       @state = :stopped
-      @client.unbind
+      #@client.unbind
     end
   end
 end
