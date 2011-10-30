@@ -16,10 +16,7 @@ module RubyAMI
     end
 
     def mocked_server(times = nil, &block)
-      @client ||= mock()
-      @client.stubs(:unbind) unless @client.respond_to?(:unbind)
-      @client.stubs(:post_init) unless @client.respond_to?(:post_init)
-
+      thread = Thread.start do
       MockServer.any_instance.expects(:receive_data).send(*(times ? [:times, times] : [:at_least, 1])).with &block
       EventMachine::run {
         EM.add_timer(0.5) { EM.stop if EM.reactor_running? }
@@ -30,22 +27,20 @@ module RubyAMI
         EventMachine::start_server '127.0.0.1', port, ServerMock
 
         # Stream connection
-        #EM.connect('127.0.0.1', port, Stream, @client, 'username', 'pass', @events) { |c| @stream = c }
         options = {:username => 'username', :password => 'pass', :events => @events}
-        EM.connect('127.0.0.1', port, Stream, options) {|c| @stream = c}
+        @connection = EM.connect('127.0.0.1', port, Stream, options) {|c| @stream = c}
       }
+      end
+      sleep 0.1
+      thread
     end
 
     it 'can be started' do
-      #client = mock
       EM.expects(:connect).with do |*parms|
         parms[0].should == 'example.com'
         parms[1].should == 1234
         parms[2].should == Stream
         parms[3].should == {:username => 'username', :password => 'password', :events => true}
-#        parms[4].should == 'username'
-#        parms[5].should == 'password'
-#        parms[6].should == true
       end
 
       Stream.start 'example.com', 1234, {:username => 'username', :password => 'password', :events => true}
@@ -53,18 +48,13 @@ module RubyAMI
 
     describe "after connection" do
       it "should be started" do
-        mocked_server(1) do |val, server|
+        (mocked_server(1) do |val, server|
           @stream.started?.should be_true
-        end
+        end).join
       end
 
       it "logs in" do
-        @client = mock
-        @client.expects(:on_stream_ready).with do |r|
-          r.should be_a Stream
-          r.should be_ready
-        end
-        mocked_server(1) do |val, server|
+        thread = mocked_server(1) do |val, server|
           val.should == Action.new('Login', 'Username' => 'username', 'Secret' => 'pass', 'Events' => 'On').to_s
           server.send_data <<-RESPONSE
 Response: Success
@@ -73,18 +63,16 @@ Message: Authentication accepted
 
           RESPONSE
         end
+        @stream.ready?.should == true
+        thread.join
+        @stream.stopped?.should == true
       end
 
       describe "with events turned off" do
         before { @events = false }
 
         it "logs in" do
-          @client = mock
-          @client.expects(:on_stream_ready).with do |r|
-            r.should be_a Stream
-            r.should be_ready
-          end
-          mocked_server(1) do |val, server|
+          thread = mocked_server(1) do |val, server|
             val.should == Action.new('Login', 'Username' => 'username', 'Secret' => 'pass', 'Events' => 'Off').to_s
             server.send_data <<-RESPONSE
 Response: Success
@@ -93,11 +81,15 @@ Message: Authentication accepted
 
             RESPONSE
           end
+          @stream.ready?.should == true
+          thread.join
+          @stream.stopped?.should == true
         end
       end
     end
 
     it 'sends events to the client when the stream is ready' do
+      pending 'need to implent this functionality and refactor this test'
       @client = mock
       @client.expects(:message_received).with do |e|
         EM.stop
@@ -117,6 +109,7 @@ Cause: 0
     end
 
     it 'sends responses to the client when the stream is ready' do
+      pending 'need to implent this functionality and refactor this test'
       @client = mock
       @client.expects(:message_received).with do |r|
         EM.stop
@@ -135,9 +128,6 @@ Message: Authentication accepted
     end
 
     it 'puts itself in the stopped state and calls @client.unbind when unbound' do
-      @client = mock
-      @client.expects(:unbind).at_least_once
-
       started = false
       mocked_server(1) do |val, server|
         EM.stop

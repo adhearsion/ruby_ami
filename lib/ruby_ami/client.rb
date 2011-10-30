@@ -10,7 +10,7 @@ module RubyAMI
           loop do
             @empty_condition.wait_while {@queue.empty?}
             action = @queue.pop
-            connection.send_command action
+            connection.send_command action.to_s
             #something
 
           end
