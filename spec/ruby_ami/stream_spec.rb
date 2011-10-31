@@ -15,143 +15,63 @@ module RubyAMI
       end
     end
 
-    def mocked_server(times = nil, events, &block)
-      thread = Thread.start do
-        if times == 1
-          MockServer.any_instance.expects(:receive_data).twice.with &block
-        else
-        MockServer.any_instance.expects(:receive_data).once.with() { |val, server|         
-          val.should == Action.new('Login', nil, 'Username' => 'username', 'Secret' => 'pass', 'Events' => events).to_s
-          server.send_data <<-RESPONSE
-Response: Success
-ActionID: actionid
-Message: Authentication accepted
+    def mocked_server(times = nil, fake_client = nil, &block)
+      @client ||= mock
+      
+      MockServer.any_instance.expects(:receive_data).send(*(times ? [:times, times] : [:at_least, 1])).with &block
+       EventMachine::run {
+         EM.add_timer(0.5) { EM.stop if EM.reactor_running? }
 
-          RESPONSE
-        }
-        end
-        #MockServer.any_instance.expects(:receive_data).send(*(times ? [:times, times] : [:at_least, 1])).with &block
-        EventMachine::run {
-          EM.add_timer(0.5) { EM.stop if EM.reactor_running? }
+         port = 50000 - rand(1000)
 
-          port = 50000 - rand(1000)
+         # Mocked server
+         EventMachine::start_server '127.0.0.1', port, ServerMock
 
-          # Mocked server
-          EventMachine::start_server '127.0.0.1', port, ServerMock
+         # Stream connection
+         EM.connect('127.0.0.1', port, Stream, lambda { |m| @client.message_received m }) {|c| @stream = c}
 
-          # Stream connection
-          options = {:username => 'username', :password => 'pass', :events => @events}
-          @connection = EM.connect('127.0.0.1', port, Stream, options) {|c| @stream = c}
-        }
-      end
-      sleep 0.1
-      thread
+         fake_client.call if fake_client.respond_to? :call
+       }
     end
 
     it 'can be started' do
-      EM.expects(:connect).with do |*parms|
-        parms[0].should == 'example.com'
-        parms[1].should == 1234
-        parms[2].should == Stream
-        parms[3].should == {:username => 'username', :password => 'password', :events => true}
+      EM.expects(:connect).with do |*params|
+        params[0].should == 'example.com'
+        params[1].should == 1234
+        params[2].should == Stream
+        params[3].should be_a Proc
       end
 
-      Stream.start 'example.com', 1234, {:username => 'username', :password => 'password', :events => true}
+      Stream.start('example.com', 1234, lambda {})
     end
 
     describe "after connection" do
       it "should be started" do
-        (mocked_server(0, 'On') do |val, server|
+        mocked_server(0) do |val, server|
           @stream.started?.should be_true
-        end).join
-      end
-
-      it "logs in" do
-        thread = mocked_server(0, 'On')
-        @stream.ready?.should == true
-        thread.join
-        @stream.stopped?.should == true
-      end
-
-      describe "with events turned off" do
-        before { @events = false }
-
-        it "logs in" do
-          thread = mocked_server(0, 'Off')
-          @stream.ready?.should == true
-          thread.join
-          @stream.stopped?.should == true
         end
       end
 
-      it "sends a command after logging in" do
+      it "can send a command" do
         action = Action.new('Command', nil, 'Command' => 'RECORD FILE evil', 'ActionID' => 666, 'Events' => 'On') 
-        thread = mocked_server(1, 'On') do |val, server|
-          if val == Action.new('Login', nil, 'Username' => 'username', 'Secret' => 'pass', 'Events' => 'On').to_s
-            server.send_data <<-RESPONSE
-Response: Success
-ActionID: actionid
-Message: Authentication accepted
-
-            RESPONSE
-          else
-            val.should == action.to_s
-          end
+        mocked_server(1, lambda { @stream.send_action action }) do |val, server|
+          val.should == action.to_s
         end
-        @stream.ready?.should == true
-        @stream.send_action action 
-        thread.join
-        @stream.stopped?.should == true
-      end
-
-      it "sends a command after logging in and assigns values" do
-        response_resource = FutureResource.new
-      #respose_resource.resource
-        action = Action.new('Command', response_resource, 'Command' => 'RECORD FILE evil', 'ActionID' => 666, 'Events' => 'On') 
-        thread = mocked_server(1, 'On') do |val, server|
-          if val == Action.new('Login', nil, 'Username' => 'username', 'Secret' => 'pass', 'Events' => 'On').to_s
-            server.send_data <<-RESPONSE
-Response: Success
-ActionID: actionid
-Message: Authentication accepted
-
-            RESPONSE
-          else
-            val.should == action.to_s
-            server.send_data <<-RESPONSE
-Response: Follows
- 200 foo
---END COMMAND--
-
-            RESPONSE
-#RESPONSE
-#Response: Follows
-#  200 result=0
-#ActionID: 666
-#
-#            RESPONSE
- 
-          end
-        end
-        @stream.ready?.should == true
-        @stream.send_action action
-        p 'waiting for response_resource' 
-        p response_resource.resource
-        thread.join
-        @stream.stopped?.should == true
       end
     end
 
     it 'sends events to the client when the stream is ready' do
-      pending 'need to implent this functionality and refactor this test'
       @client = mock
       @client.expects(:message_received).with do |e|
         EM.stop
         e.should be_a Event
         e.name.should == 'Hangup'
+        e['Channel'].should == 'SIP/101-3f3f'
+        e['Uniqueid'].should == '1094154427.10'
+        e['Cause'].should == '0'
       end
 
-      mocked_server(1) do |val, server|
+      mocked_server(1, lambda { @stream.send_data 'Foo' }) do |val, server|
         server.send_data <<-EVENT
 Event: Hangup
 Channel: SIP/101-3f3f
@@ -163,15 +83,15 @@ Cause: 0
     end
 
     it 'sends responses to the client when the stream is ready' do
-      pending 'need to implent this functionality and refactor this test'
       @client = mock
       @client.expects(:message_received).with do |r|
         EM.stop
         r.should be_a Response
         r['ActionID'].should == 'ee33eru2398fjj290'
+        r['Message'].should == 'Authentication accepted'
       end
 
-      mocked_server(1) do |val, server|
+      mocked_server(1, lambda { @stream.send_data 'Foo' }) do |val, server|
         server.send_data <<-EVENT
 Response: Success
 ActionID: ee33eru2398fjj290
@@ -181,14 +101,33 @@ Message: Authentication accepted
       end
     end
 
+    it 'sends error to the client when the stream is ready and a bad command was send' do
+      @client = mock
+      @client.expects(:message_received).with do |r|
+        EM.stop
+        r.should be_a Error
+        r['ActionID'].should == 'ee33eru2398fjj290'
+        r['Message'].should == 'You stupid git'
+      end
+
+      mocked_server(1, lambda { @stream.send_data 'Foo' }) do |val, server|
+        server.send_data <<-EVENT
+Response: Error
+ActionID: ee33eru2398fjj290
+Message: You stupid git
+
+        EVENT
+      end
+    end
+
     it 'puts itself in the stopped state and calls @client.unbind when unbound' do
       started = false
-      (mocked_server(0, 'On') do |val, server|
+      mocked_server(0) do |val, server|
         EM.stop
         @stream.stopped?.should be false
         @stream.unbind
         @stream.stopped?.should be true
-      end).join
+      end
     end
   end
 end
