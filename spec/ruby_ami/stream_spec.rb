@@ -21,7 +21,7 @@ module RubyAMI
           MockServer.any_instance.expects(:receive_data).twice.with &block
         else
         MockServer.any_instance.expects(:receive_data).once.with() { |val, server|         
-          val.should == Action.new('Login', 'Username' => 'username', 'Secret' => 'pass', 'Events' => events).to_s
+          val.should == Action.new('Login', nil, 'Username' => 'username', 'Secret' => 'pass', 'Events' => events).to_s
           server.send_data <<-RESPONSE
 Response: Success
 ActionID: actionid
@@ -85,9 +85,9 @@ Message: Authentication accepted
       end
 
       it "sends a command after logging in" do
-        action = Action.new('Command', 'Command' => 'RECORD FILE evil', 'ActionID' => 666, 'Events' => 'Off') 
+        action = Action.new('Command', nil, 'Command' => 'RECORD FILE evil', 'ActionID' => 666, 'Events' => 'On') 
         thread = mocked_server(1, 'On') do |val, server|
-          if val == Action.new('Login', 'Username' => 'username', 'Secret' => 'pass', 'Events' => 'Off').to_s
+          if val == Action.new('Login', nil, 'Username' => 'username', 'Secret' => 'pass', 'Events' => 'On').to_s
             server.send_data <<-RESPONSE
 Response: Success
 ActionID: actionid
@@ -100,6 +100,43 @@ Message: Authentication accepted
         end
         @stream.ready?.should == true
         @stream.send_action action 
+        thread.join
+        @stream.stopped?.should == true
+      end
+
+      it "sends a command after logging in and assigns values" do
+        response_resource = FutureResource.new
+      #respose_resource.resource
+        action = Action.new('Command', response_resource, 'Command' => 'RECORD FILE evil', 'ActionID' => 666, 'Events' => 'On') 
+        thread = mocked_server(1, 'On') do |val, server|
+          if val == Action.new('Login', nil, 'Username' => 'username', 'Secret' => 'pass', 'Events' => 'On').to_s
+            server.send_data <<-RESPONSE
+Response: Success
+ActionID: actionid
+Message: Authentication accepted
+
+            RESPONSE
+          else
+            val.should == action.to_s
+            server.send_data <<-RESPONSE
+Response: Follows
+ 200 foo
+--END COMMAND--
+
+            RESPONSE
+#RESPONSE
+#Response: Follows
+#  200 result=0
+#ActionID: 666
+#
+#            RESPONSE
+ 
+          end
+        end
+        @stream.ready?.should == true
+        @stream.send_action action
+        p 'waiting for response_resource' 
+        p response_resource.resource
         thread.join
         @stream.stopped?.should == true
       end
