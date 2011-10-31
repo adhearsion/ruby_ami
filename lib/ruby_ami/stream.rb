@@ -30,7 +30,7 @@ module RubyAMI
     def send_action(action)
 #      Action.new(action_name, headers, &block).tap do |action|
 #        @logger.debug "[SEND] #{action.to_s}"
-#        send_data action.to_s
+         send_data action.to_s
 #      end
     end
 

@@ -15,21 +15,34 @@ module RubyAMI
       end
     end
 
-    def mocked_server(times = nil, &block)
+    def mocked_server(times = nil, events, &block)
       thread = Thread.start do
-      MockServer.any_instance.expects(:receive_data).send(*(times ? [:times, times] : [:at_least, 1])).with &block
-      EventMachine::run {
-        EM.add_timer(0.5) { EM.stop if EM.reactor_running? }
+        if times == 1
+          MockServer.any_instance.expects(:receive_data).twice.with &block
+        else
+        MockServer.any_instance.expects(:receive_data).once.with() { |val, server|         
+          val.should == Action.new('Login', 'Username' => 'username', 'Secret' => 'pass', 'Events' => events).to_s
+          server.send_data <<-RESPONSE
+Response: Success
+ActionID: actionid
+Message: Authentication accepted
 
-        port = 50000 - rand(1000)
+          RESPONSE
+        }
+        end
+        #MockServer.any_instance.expects(:receive_data).send(*(times ? [:times, times] : [:at_least, 1])).with &block
+        EventMachine::run {
+          EM.add_timer(0.5) { EM.stop if EM.reactor_running? }
 
-        # Mocked server
-        EventMachine::start_server '127.0.0.1', port, ServerMock
+          port = 50000 - rand(1000)
 
-        # Stream connection
-        options = {:username => 'username', :password => 'pass', :events => @events}
-        @connection = EM.connect('127.0.0.1', port, Stream, options) {|c| @stream = c}
-      }
+          # Mocked server
+          EventMachine::start_server '127.0.0.1', port, ServerMock
+
+          # Stream connection
+          options = {:username => 'username', :password => 'pass', :events => @events}
+          @connection = EM.connect('127.0.0.1', port, Stream, options) {|c| @stream = c}
+        }
       end
       sleep 0.1
       thread
@@ -48,21 +61,13 @@ module RubyAMI
 
     describe "after connection" do
       it "should be started" do
-        (mocked_server(1) do |val, server|
+        (mocked_server(0, 'On') do |val, server|
           @stream.started?.should be_true
         end).join
       end
 
       it "logs in" do
-        thread = mocked_server(1) do |val, server|
-          val.should == Action.new('Login', 'Username' => 'username', 'Secret' => 'pass', 'Events' => 'On').to_s
-          server.send_data <<-RESPONSE
-Response: Success
-ActionID: actionid
-Message: Authentication accepted
-
-          RESPONSE
-        end
+        thread = mocked_server(0, 'On')
         @stream.ready?.should == true
         thread.join
         @stream.stopped?.should == true
@@ -72,19 +77,31 @@ Message: Authentication accepted
         before { @events = false }
 
         it "logs in" do
-          thread = mocked_server(1) do |val, server|
-            val.should == Action.new('Login', 'Username' => 'username', 'Secret' => 'pass', 'Events' => 'Off').to_s
+          thread = mocked_server(0, 'Off')
+          @stream.ready?.should == true
+          thread.join
+          @stream.stopped?.should == true
+        end
+      end
+
+      it "sends a command after logging in" do
+        action = Action.new('Command', 'Command' => 'RECORD FILE evil', 'ActionID' => 666, 'Events' => 'Off') 
+        thread = mocked_server(1, 'On') do |val, server|
+          if val == Action.new('Login', 'Username' => 'username', 'Secret' => 'pass', 'Events' => 'Off').to_s
             server.send_data <<-RESPONSE
 Response: Success
 ActionID: actionid
 Message: Authentication accepted
 
             RESPONSE
+          else
+            val.should == action.to_s
           end
-          @stream.ready?.should == true
-          thread.join
-          @stream.stopped?.should == true
         end
+        @stream.ready?.should == true
+        @stream.send_action action 
+        thread.join
+        @stream.stopped?.should == true
       end
     end
 
@@ -129,12 +146,12 @@ Message: Authentication accepted
 
     it 'puts itself in the stopped state and calls @client.unbind when unbound' do
       started = false
-      mocked_server(1) do |val, server|
+      (mocked_server(0, 'On') do |val, server|
         EM.stop
         @stream.stopped?.should be false
         @stream.unbind
         @stream.stopped?.should be true
-      end
+      end).join
     end
   end
 end
