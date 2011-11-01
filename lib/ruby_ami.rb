@@ -10,6 +10,7 @@
   future-resource
   logger
   girl_friday
+  countdownlatch
 
   ruby_ami/metaprogramming
 }.each { |f| require f }

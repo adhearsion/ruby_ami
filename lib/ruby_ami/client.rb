@@ -5,7 +5,11 @@ module RubyAMI
     def initialize(options)
       @options      = options
       @state        = :stopped
+
+      @actions_write_blocker = CountDownLatch.new 1
+
       @action_queue = GirlFriday::WorkQueue.new(:actions, :size => 1) do |action|
+        @actions_write_blocker.wait
         _send_action action
       end
 
@@ -36,7 +40,10 @@ module RubyAMI
     end
 
     def handle_message(message)
-      login_actions if message.is_a? Stream::Connected
+      if message.is_a? Stream::Connected
+        start_writing_actions
+        login_actions
+      end
     end
 
     def handle_event(event)
@@ -49,10 +56,12 @@ module RubyAMI
       actions_stream.send_action action
     end
 
+    def start_writing_actions
+      @actions_write_blocker.countdown!
+    end
+
     def login_actions
-      login_action.tap do |action|
-        actions_stream.send_action action
-      end
+      @action_queue << login_action
     end
 
     def login_events
@@ -62,7 +71,7 @@ module RubyAMI
     end
 
     def login_action(events = 'Off')
-      Action.new 'Login', 
+      Action.new 'Login',
                  'Username' => options[:username],
                  'Secret' => options[:password],
                  'Events' => events

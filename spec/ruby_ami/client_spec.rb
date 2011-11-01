@@ -52,7 +52,9 @@ module RubyAMI
             action.to_s.should == expected_login_action.to_s
           end
 
+          GirlFriday::WorkQueue.immediate!
           subject.handle_message Stream::Connected.new
+          GirlFriday::WorkQueue.queue!
         end
       end
 
@@ -91,6 +93,14 @@ module RubyAMI
       let(:expected_action) { Action.new action_name, headers }
 
       let(:send_action) { subject.send_action action_name, headers }
+
+      let(:mock_actions_stream) { mock 'Actions Stream' }
+
+      before do
+        subject.stubs(:actions_stream).returns mock_actions_stream
+        subject.stubs(:login_actions).returns nil
+        subject.handle_message Stream::Connected.new
+      end
 
       it 'should queue up actions to be sent' do
         subject.action_queue.expects(:<<).with expected_action
