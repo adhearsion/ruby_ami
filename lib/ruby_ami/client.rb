@@ -9,24 +9,25 @@ module RubyAMI
       define_method("#{state}?") { @state == state }
     end
 
-    def start()
+    def start
       @command_queue = Queue.new
       @response_queue = Queue.new
       EventMachine.run do
-          @state = :started
-          connection = Stream.start @options[:server], @options[:port], lambda {|response| @response_queue << response } #stuff with reference to queue
-          loop do
-            action = @command_queue.pop
-            connection.send_command action
-            #something
+        @state = :started
+        connection = Stream.start @options[:server],
+                                  @options[:port],
+                                  lambda { |response| @response_queue << response }
+        loop do
+          action = @command_queue.pop
+          connection.send_command action
+          #something
+        end
 
-          end
-
-          #Stream.start #stuff with reference to block to execute when stuff comes in from non-event stream
+        #Stream.start #stuff with reference to block to execute when stuff comes in from non-event stream
       end      
     end
 
-    def send_message()
+    def send_message
       @command_queue << Action.new(action_name, nil, headers)
       @response_queue.pop
     end
@@ -35,9 +36,8 @@ module RubyAMI
     #  p message
     #end
 
-    def queue_worker()
+    def queue_worker
     end
-
     
   end
 end
