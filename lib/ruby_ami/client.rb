@@ -1,8 +1,11 @@
 module RubyAMI
   class Client
+    attr_reader :options, :action_queue
+
     def initialize(options)
-      @options = options
-      @state = :stopped
+      @options      = options
+      @state        = :stopped
+      @action_queue = Queue.new
     end
 
     [:started, :stopped, :ready].each do |state|
@@ -10,34 +13,25 @@ module RubyAMI
     end
 
     def start
-      @command_queue = Queue.new
-      @response_queue = Queue.new
       EventMachine.run do
-        @state = :started
-        connection = Stream.start @options[:server],
-                                  @options[:port],
-                                  lambda { |response| @response_queue << response }
-        loop do
-          action = @command_queue.pop
-          connection.send_command action
-          #something
-        end
+        @events_stream = Stream.start @options[:server],
+                                      @options[:port],
+                                      lambda { |event| handle_event event }
 
         #Stream.start #stuff with reference to block to execute when stuff comes in from non-event stream
+
+        @state = :started
       end      
     end
 
-    def send_message
-      @command_queue << Action.new(action_name, nil, headers)
-      @response_queue.pop
+    def send_action(action_name, headers, &block)
+      @action_queue << Action.new(action_name, headers, &block)
     end
 
-    #def message_received(message)
-    #  p message
-    #end
-
-    def queue_worker
+    def message_received(message)
     end
-    
+
+    def handle_event(event)
+    end
   end
 end

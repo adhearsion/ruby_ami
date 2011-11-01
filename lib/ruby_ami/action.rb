@@ -1,7 +1,4 @@
 module RubyAMI
-  ##
-  # Each time AMI#send_action is invoked, a new Action is instantiated.
-  #
   class Action
     attr_reader :name, :headers, :action_id
 
