@@ -9,6 +9,7 @@
   eventmachine
   future-resource
   logger
+  girl_friday
 
   ruby_ami/metaprogramming
 }.each { |f| require f }

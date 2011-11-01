@@ -6,6 +6,14 @@ module RubyAMI
       @options      = options
       @state        = :stopped
       @action_queue = Queue.new
+
+      @message_processor = GirlFriday::WorkQueue.new(:messages, :size => 2) do |message|
+        handle_message message
+      end
+
+      @event_processor = GirlFriday::WorkQueue.new(:events, :size => 2) do |event|
+        handle_event event
+      end
     end
 
     [:started, :stopped, :ready].each do |state|
@@ -15,8 +23,8 @@ module RubyAMI
     def start
       EventMachine.run do
         yield
-        @events_stream = start_stream lambda { |event| handle_event event }
-        @actions_stream = start_stream lambda { |message| handle_message message }
+        @events_stream  = start_stream lambda { |event| @event_processor << event }
+        @actions_stream = start_stream lambda { |message| @message_processor << message }
         @state = :started
       end
     end
