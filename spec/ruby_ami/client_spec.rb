@@ -17,8 +17,7 @@ module RubyAMI
 
     its(:options) { should == options }
 
-    its(:action_queue) { should be_a Queue }
-    its(:action_queue) { should be_empty }
+    its(:action_queue) { should be_a GirlFriday::WorkQueue }
 
     describe 'starting up' do
       before do
@@ -91,13 +90,22 @@ module RubyAMI
       end
       let(:expected_action) { Action.new action_name, headers }
 
+      let(:send_action) { subject.send_action action_name, headers }
+
       it 'should queue up actions to be sent' do
-        subject.send_action action_name, headers
-        subject.action_queue.pop(true).to_s.should == expected_action.to_s
+        subject.action_queue.expects(:<<).with expected_action
+        send_action
       end
 
       describe 'from the queue' do
-        pending
+        before(:all) { GirlFriday::WorkQueue.immediate! }
+
+        it 'should send actions to the stream' do
+          subject.actions_stream.expects(:send_action).with expected_action
+          send_action
+        end
+
+        after(:all) { GirlFriday::WorkQueue.queue! }
       end
     end
 

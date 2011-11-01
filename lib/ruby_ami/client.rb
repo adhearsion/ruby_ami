@@ -5,7 +5,9 @@ module RubyAMI
     def initialize(options)
       @options      = options
       @state        = :stopped
-      @action_queue = Queue.new
+      @action_queue = GirlFriday::WorkQueue.new(:actions, :size => 1) do |action|
+        _send_action action
+      end
 
       @message_processor = GirlFriday::WorkQueue.new(:messages, :size => 2) do |message|
         handle_message message
@@ -42,6 +44,10 @@ module RubyAMI
     end
 
     private
+
+    def _send_action(action)
+      actions_stream.send_action action
+    end
 
     def login_actions
       login_action.tap do |action|
