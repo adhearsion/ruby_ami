@@ -92,30 +92,41 @@ module RubyAMI
       end
       let(:expected_action) { Action.new action_name, headers }
 
-      let(:send_action) { subject.send_action action_name, headers }
-
       let(:mock_actions_stream) { mock 'Actions Stream' }
 
       before do
         subject.stubs(:actions_stream).returns mock_actions_stream
         subject.stubs(:login_actions).returns nil
-        subject.handle_message Stream::Connected.new
       end
 
       it 'should queue up actions to be sent' do
+        subject.handle_message Stream::Connected.new
         subject.action_queue.expects(:<<).with expected_action
-        send_action
+        subject.send_action action_name, headers
       end
 
       describe 'from the queue' do
-        before(:all) { GirlFriday::WorkQueue.immediate! }
-
-        it 'should send actions to the stream' do
+        it 'should send actions to the stream and set their responses' do
           subject.actions_stream.expects(:send_action).with expected_action
-          send_action
+          subject.handle_message Stream::Connected.new
+
+          send_thread = Thread.new do
+            GirlFriday::WorkQueue.immediate!
+            subject.send_action expected_action
+            GirlFriday::WorkQueue.queue!
+          end
+
+          sleep 0.1
+
+          response = Response.new
+          response['ActionID'] = expected_action.action_id
+          response['Message'] = 'Action completed'
+
+          subject.handle_message response
+          send_thread.join
+          expected_action.response.should be response
         end
 
-        after(:all) { GirlFriday::WorkQueue.queue! }
       end
     end
 

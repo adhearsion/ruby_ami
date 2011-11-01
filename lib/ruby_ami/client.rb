@@ -3,21 +3,22 @@ module RubyAMI
     attr_reader :options, :action_queue, :events_stream, :actions_stream
 
     def initialize(options)
-      @options      = options
-      @state        = :stopped
+      @options          = options
+      @state            = :stopped
+      @pending_actions  = {}
 
       @actions_write_blocker = CountDownLatch.new 1
 
-      @action_queue = GirlFriday::WorkQueue.new(:actions, :size => 1) do |action|
+      @action_queue = GirlFriday::WorkQueue.new(:actions, :size => 1, :error_handler => ErrorHandler) do |action|
         @actions_write_blocker.wait
         _send_action action
       end
 
-      @message_processor = GirlFriday::WorkQueue.new(:messages, :size => 2) do |message|
+      @message_processor = GirlFriday::WorkQueue.new(:messages, :size => 2, :error_handler => ErrorHandler) do |message|
         handle_message message
       end
 
-      @event_processor = GirlFriday::WorkQueue.new(:events, :size => 2) do |event|
+      @event_processor = GirlFriday::WorkQueue.new(:events, :size => 2, :error_handler => ErrorHandler) do |event|
         handle_event event
       end
     end
@@ -35,14 +36,20 @@ module RubyAMI
       end
     end
 
-    def send_action(action_name, headers, &block)
-      action_queue << Action.new(action_name, headers, &block)
+    def send_action(action, headers = {}, &block)
+      (action.is_a?(Action) ? action : Action.new(action, headers, &block)).tap do |action|
+        @pending_actions[action.action_id] = action
+        action_queue << action
+      end
     end
 
     def handle_message(message)
-      if message.is_a? Stream::Connected
+      case message
+      when Stream::Connected
         start_writing_actions
         login_actions
+      when Response
+        @pending_actions.delete(message.action_id).response = message
       end
     end
 
@@ -79,6 +86,13 @@ module RubyAMI
 
     def start_stream(callback)
       Stream.start @options[:server], @options[:port], callback
+    end
+
+    class ErrorHandler
+      def handle(error)
+        puts error
+        puts error.backtrace.join("\n")
+      end
     end
   end
 end
