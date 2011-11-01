@@ -23,6 +23,7 @@ module RubyAMI
 
     def post_init
       @state = :started
+      @event_callback.call Connected.new
     end
 
     def send_action(action)

@@ -15,23 +15,33 @@ module RubyAMI
       end
     end
 
+    def client
+      @client ||= mock('Client')
+    end
+
+    let(:sequence) { 1 }
+
     def mocked_server(times = nil, fake_client = nil, &block)
-      @client ||= mock
-      
       MockServer.any_instance.expects(:receive_data).send(*(times ? [:times, times] : [:at_least, 1])).with &block
-       EventMachine::run {
-         EM.add_timer(0.5) { EM.stop if EM.reactor_running? }
+      EventMachine::run {
+        EM.add_timer(0.5) { EM.stop if EM.reactor_running? }
 
-         port = 50000 - rand(1000)
+        port = 50000 - rand(1000)
 
-         # Mocked server
-         EventMachine::start_server '127.0.0.1', port, ServerMock
+        # Mocked server
+        EventMachine::start_server '127.0.0.1', port, ServerMock
 
-         # Stream connection
-         EM.connect('127.0.0.1', port, Stream, lambda { |m| @client.message_received m }) {|c| @stream = c}
+        # Stream connection
+        EM.connect('127.0.0.1', port, Stream, lambda { |m| client.message_received m }) {|c| @stream = c}
 
-         fake_client.call if fake_client.respond_to? :call
-       }
+        fake_client.call if fake_client.respond_to? :call
+      }
+    end
+
+    def expect_connected_event
+      client.expects(:message_received).with do |e|
+        e.should be_a Stream::Connected
+      end
     end
 
     it 'can be started' do
@@ -47,12 +57,14 @@ module RubyAMI
 
     describe "after connection" do
       it "should be started" do
+        expect_connected_event
         mocked_server(0) do |val, server|
           @stream.started?.should be_true
         end
       end
 
       it "can send a command" do
+        expect_connected_event
         action = Action.new('Command', 'Command' => 'RECORD FILE evil', 'ActionID' => 666, 'Events' => 'On') 
         mocked_server(1, lambda { @stream.send_action action }) do |val, server|
           val.should == action.to_s
@@ -61,14 +73,18 @@ module RubyAMI
     end
 
     it 'sends events to the client when the stream is ready' do
-      @client = mock
-      @client.expects(:message_received).with do |e|
-        EM.stop
-        e.should be_a Event
-        e.name.should == 'Hangup'
-        e['Channel'].should == 'SIP/101-3f3f'
-        e['Uniqueid'].should == '1094154427.10'
-        e['Cause'].should == '0'
+      client.expects(:message_received).twice.with do |e|
+        if @connected
+          EM.stop
+          e.should be_a Event
+          e.name.should == 'Hangup'
+          e['Channel'].should == 'SIP/101-3f3f'
+          e['Uniqueid'].should == '1094154427.10'
+          e['Cause'].should == '0'
+        else
+          e.should be_a Stream::Connected
+          @connected = true
+        end
       end
 
       mocked_server(1, lambda { @stream.send_data 'Foo' }) do |val, server|
@@ -83,12 +99,16 @@ Cause: 0
     end
 
     it 'sends responses to the client when the stream is ready' do
-      @client = mock
-      @client.expects(:message_received).with do |r|
-        EM.stop
-        r.should be_a Response
-        r['ActionID'].should == 'ee33eru2398fjj290'
-        r['Message'].should == 'Authentication accepted'
+      client.expects(:message_received).twice.with do |r|
+        if @connected
+          EM.stop
+          r.should be_a Response
+          r['ActionID'].should == 'ee33eru2398fjj290'
+          r['Message'].should == 'Authentication accepted'
+        else
+          r.should be_a Stream::Connected
+          @connected = true
+        end
       end
 
       mocked_server(1, lambda { @stream.send_data 'Foo' }) do |val, server|
@@ -102,12 +122,16 @@ Message: Authentication accepted
     end
 
     it 'sends error to the client when the stream is ready and a bad command was send' do
-      @client = mock
-      @client.expects(:message_received).with do |r|
-        EM.stop
-        r.should be_a Error
-        r['ActionID'].should == 'ee33eru2398fjj290'
-        r['Message'].should == 'You stupid git'
+      client.expects(:message_received).twice.with do |r|
+        if @connected
+          EM.stop
+          r.should be_a Error
+          r['ActionID'].should == 'ee33eru2398fjj290'
+          r['Message'].should == 'You stupid git'
+        else
+          r.should be_a Stream::Connected
+          @connected = true
+        end
       end
 
       mocked_server(1, lambda { @stream.send_data 'Foo' }) do |val, server|
@@ -122,6 +146,7 @@ Message: You stupid git
 
     it 'puts itself in the stopped state and calls @client.unbind when unbound' do
       started = false
+      expect_connected_event
       mocked_server(0) do |val, server|
         EM.stop
         @stream.stopped?.should be false
