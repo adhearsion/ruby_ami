@@ -1,24 +1,34 @@
 module RubyAMI
   class Client
     def initialize(options)
-      @queue = Queue.new
+      @options = options
+      @state = :stopped
+    end
+
+    [:started, :stopped, :ready].each do |state|
+      define_method("#{state}?") { @state == state }
+    end
+
+    def start()
+      @command_queue = Queue.new
+      @response_queue = Queue.new
       EventMachine.run do
-          connection = Stream.start options[:server].delete, options[:port].delete, options[:handler].delete, options #stuff with reference to queue
+          @state = :started
+          connection = Stream.start @options[:server], @options[:port], lambda {|response| @response_queue << response } #stuff with reference to queue
           loop do
-            action = @queue.pop
-            connection.send_command action.to_s
+            action = @command_queue.pop
+            connection.send_command action
             #something
 
           end
 
-          Stream.start #stuff with reference to block to execute when stuff comes in from non-event stream
+          #Stream.start #stuff with reference to block to execute when stuff comes in from non-event stream
       end      
     end
 
     def send_message()
-      response_resource = FutureResource.new
-      @queue << Action.new(action_name, headers, response_resource)
-      respose_resource.resource
+      @command_queue << Action.new(action_name, nil, headers)
+      @response_queue.pop
     end
 
     #def message_received(message)

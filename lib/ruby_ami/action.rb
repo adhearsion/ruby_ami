@@ -3,7 +3,7 @@ module RubyAMI
   # Each time AMI#send_action is invoked, a new Action is instantiated.
   #
   class Action
-    attr_reader :name, :headers, :future_resource, :action_id, :response_resource
+    attr_reader :name, :headers, :action_id, :response_resource
 
     CAUSAL_EVENT_NAMES = %w[queuestatus sippeers iaxpeers parkedcalls dahdishowchannels coreshowchannels
                             dbget status agents konferencelist] unless defined? CAUSAL_EVENT_NAMES

@@ -1,7 +1,7 @@
 module RubyAMI
   class Stream < EventMachine::Connection
-    def self.start(host, port, client)
-      EM.connect host, port, self, client
+    def self.start(host, port, event_callback)
+      EM.connect host, port, self, event_callback
     end
 
     def initialize(event_callback)

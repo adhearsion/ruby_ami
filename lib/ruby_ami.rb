@@ -24,4 +24,5 @@ module RubyAMI
   autoload :Response
   autoload :Stream
   autoload :Version
+  autoload :Login
 end
