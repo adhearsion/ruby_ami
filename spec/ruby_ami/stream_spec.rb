@@ -53,7 +53,7 @@ module RubyAMI
       end
 
       it "can send a command" do
-        action = Action.new('Command', nil, 'Command' => 'RECORD FILE evil', 'ActionID' => 666, 'Events' => 'On') 
+        action = Action.new('Command', 'Command' => 'RECORD FILE evil', 'ActionID' => 666, 'Events' => 'On') 
         mocked_server(1, lambda { @stream.send_action action }) do |val, server|
           val.should == action.to_s
         end

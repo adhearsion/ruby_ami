@@ -11,10 +11,10 @@ module RubyAMI
       stream_mock.expects(:send_command).with do |login_action| 
         @code_to_call.call response
         login_action.name.should == 'login'
-        login_action.headers.should == Action.new('Login', nil, 'Username' => 'mike', 'Secret' => 'roch', 'Events' => 'Off').headers
+        login_action.headers.should == Action.new('Login', 'Username' => 'mike', 'Secret' => 'roch', 'Events' => 'Off').headers
       end
       response_queue = Queue.new
-      Stream.expects(:start).with do |server, port, block| 
+      Stream.expects(:start).with do |server, port, block|
         server.should == '127.0.0.1'
         port.should   == '666'  
         @code_to_call = block
