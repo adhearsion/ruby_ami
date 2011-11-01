@@ -14,10 +14,11 @@ module RubyAMI
 
     def start
       EventMachine.run do
+        yield
         @events_stream = start_stream lambda { |event| handle_event event }
         @actions_stream = start_stream lambda { |message| handle_message message }
         @state = :started
-      end      
+      end
     end
 
     def send_action(action_name, headers, &block)

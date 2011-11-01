@@ -19,8 +19,6 @@ module RubyAMI
       @client ||= mock('Client')
     end
 
-    let(:sequence) { 1 }
-
     def mocked_server(times = nil, fake_client = nil, &block)
       MockServer.any_instance.expects(:receive_data).send(*(times ? [:times, times] : [:at_least, 1])).with &block
       EventMachine::run {

@@ -22,18 +22,15 @@ module RubyAMI
 
     describe 'starting up' do
       before do
-        @em_thread = Thread.new do
-          subject.start
+        subject.start do
+          EM.add_timer(0.5) { EM.stop if EM.reactor_running? }
         end
-        sleep 1
       end
 
       it { should be_started }
 
       its(:events_stream)   { should be_a Stream }
       its(:actions_stream)  { should be_a Stream }
-
-      after { @em_thread.kill if @em_thread }
     end
 
     describe 'logging in streams' do
@@ -97,6 +94,10 @@ module RubyAMI
       it 'should queue up actions to be sent' do
         subject.send_action action_name, headers
         subject.action_queue.pop(true).to_s.should == expected_action.to_s
+      end
+
+      describe 'from the queue' do
+        pending
       end
     end
 
