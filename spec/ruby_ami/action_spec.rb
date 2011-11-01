@@ -44,5 +44,26 @@ module RubyAMI
       Action.new("Ping").to_s.should =~ /^Action: Ping\r\nActionID: [\w-]+\r\n\r\n$/i
       Action.new("ParkedCalls").to_s.should =~ /^Action: ParkedCalls\r\nActionID: [\w-]+\r\n\r\n$/i
     end
+
+    describe 'comparison' do
+      describe 'with another Action' do
+        context 'with identical name and headers' do
+          let(:other) { Action.new name, headers }
+          it { should == other }
+        end
+
+        context 'with identical name and different headers' do
+          let(:other) { Action.new name, 'boo' => 'baz' }
+          it { should_not == other }
+        end
+
+        context 'with different name and identical headers' do
+          let(:other) { Action.new 'BARBAZ', headers }
+          it { should_not == other }
+        end
+      end
+
+      it { should_not == :foo }
+    end
   end # Action
 end # RubyAMI

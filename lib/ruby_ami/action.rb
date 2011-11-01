@@ -78,6 +78,11 @@ module RubyAMI
       @response_callback.call response if @response_callback
     end
 
+    def eql?(other)
+      to_s == other.to_s
+    end
+    alias :== :eql?
+
     ##
     # This class will be removed once this AMI library fully supports all known protocol anomalies.
     #
