@@ -142,10 +142,9 @@ Message: You stupid git
       end
     end
 
-    it 'puts itself in the stopped state and calls @client.unbind when unbound' do
-      started = false
+    it 'puts itself in the stopped state when unbound' do
       expect_connected_event
-      mocked_server(0) do |val, server|
+      mocked_server(1, lambda { @stream.send_data 'Foo' }) do |val, server|
         EM.stop
         @stream.stopped?.should be false
         @stream.unbind
