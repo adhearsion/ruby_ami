@@ -41,7 +41,7 @@ module RubyAMI
       @logger.debug "[RECV] #{message.inspect}"
       @event_callback.call message
     end
-    
+
     alias :error_received :message_received
 
     # Called by EM when the connection is closed

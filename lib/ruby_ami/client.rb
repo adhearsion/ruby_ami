@@ -61,6 +61,9 @@ module RubyAMI
 
     def _send_action(action)
       actions_stream.send_action action
+      action.state = :sent
+      action.response
+      action.state = :complete
     end
 
     def start_writing_actions

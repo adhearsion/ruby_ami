@@ -7,6 +7,8 @@ module RubyAMI
 
     subject { Action.new name, headers }
 
+    it { should be_new }
+
     describe "SIPPeers actions" do
       subject { Action.new('SIPPeers') }
       its(:has_causal_events?) { should be true }
@@ -43,6 +45,16 @@ module RubyAMI
     it "should properly convert itself into a String when no additional headers are given" do
       Action.new("Ping").to_s.should =~ /^Action: Ping\r\nActionID: [\w-]+\r\n\r\n$/i
       Action.new("ParkedCalls").to_s.should =~ /^Action: ParkedCalls\r\nActionID: [\w-]+\r\n\r\n$/i
+    end
+
+    it 'should be able to be marked as sent' do
+      subject.state = :sent
+      subject.should be_sent
+    end
+
+    it 'should be able to be marked as complete' do
+      subject.state = :complete
+      subject.should be_complete
     end
 
     describe 'comparison' do

@@ -44,6 +44,7 @@ module RubyAMI
         end
 
         before do
+          Action.any_instance.stubs(:response).returns(true)
           subject.stubs(:actions_stream).returns mock_actions_stream
         end
 
@@ -122,14 +123,33 @@ module RubyAMI
           response['ActionID'] = expected_action.action_id
           response['Message'] = 'Action completed'
 
+          expected_action.should be_sent
+
           subject.handle_message response
           send_thread.join
           expected_action.response.should be response
+
+          expected_action.should be_complete
         end
 
+        it 'should not send another action if the first action has not yet received a response' do
+          subject.actions_stream.expects(:send_action).once.with expected_action
+          subject.handle_message Stream::Connected.new
+          actions = []
+
+          2.times do
+            action = Action.new action_name, headers
+            actions << action
+            subject.send_action action
+          end
+
+          sleep 2
+
+          actions.should have(2).actions
+          actions[0].should be_sent
+          actions[1].should be_new
+        end
       end
     end
-
-    it "can send multiple messages from different processes and receive responses"
   end
 end

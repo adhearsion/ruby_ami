@@ -2,6 +2,8 @@ module RubyAMI
   class Action
     attr_reader :name, :headers, :action_id
 
+    attr_accessor :state
+
     CAUSAL_EVENT_NAMES = %w[queuestatus sippeers iaxpeers parkedcalls dahdishowchannels coreshowchannels
                             dbget status agents konferencelist] unless defined? CAUSAL_EVENT_NAMES
 
@@ -11,6 +13,11 @@ module RubyAMI
       @action_id  = UUIDTools::UUID.random_create
       @response   = FutureResource.new
       @response_callback = block
+      @state      = :new
+    end
+
+    [:new, :sent, :complete].each do |state|
+      define_method("#{state}?") { @state == state }
     end
 
     def replies_with_action_id?
