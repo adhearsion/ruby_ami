@@ -7,6 +7,8 @@ module RubyAMI
 
     subject { Action.new name, headers }
 
+    it { should be_new }
+
     describe "SIPPeers actions" do
       subject { Action.new('SIPPeers') }
       its(:has_causal_events?) { should be true }
@@ -45,20 +47,35 @@ module RubyAMI
       Action.new("ParkedCalls").to_s.should =~ /^Action: ParkedCalls\r\nActionID: [\w-]+\r\n\r\n$/i
     end
 
-    describe "a block passed to #new" do
-      subject do
-        Action.new("Ping") do |response|
-          @callback_called = true
-          @callback_value = response
+    it 'should be able to be marked as sent' do
+      subject.state = :sent
+      subject.should be_sent
+    end
+
+    it 'should be able to be marked as complete' do
+      subject.state = :complete
+      subject.should be_complete
+    end
+
+    describe 'comparison' do
+      describe 'with another Action' do
+        context 'with identical name and headers' do
+          let(:other) { Action.new name, headers }
+          it { should == other }
+        end
+
+        context 'with identical name and different headers' do
+          let(:other) { Action.new name, 'boo' => 'baz' }
+          it { should_not == other }
+        end
+
+        context 'with different name and identical headers' do
+          let(:other) { Action.new 'BARBAZ', headers }
+          it { should_not == other }
         end
       end
 
-      it "should be called when its response is set" do
-        response = Response.new
-        subject.response = response
-        @callback_called.should be_true
-        @callback_value.should == response
-      end
+      it { should_not == :foo }
     end
   end # Action
 end # RubyAMI

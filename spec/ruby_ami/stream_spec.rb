@@ -15,11 +15,11 @@ module RubyAMI
       end
     end
 
-    def mocked_server(times = nil, &block)
-      @client ||= mock()
-      @client.stubs(:unbind) unless @client.respond_to?(:unbind)
-      @client.stubs(:post_init) unless @client.respond_to?(:post_init)
+    def client
+      @client ||= mock('Client')
+    end
 
+    def mocked_server(times = nil, fake_client = nil, &block)
       MockServer.any_instance.expects(:receive_data).send(*(times ? [:times, times] : [:at_least, 1])).with &block
       EventMachine::run {
         EM.add_timer(0.5) { EM.stop if EM.reactor_running? }
@@ -30,80 +30,62 @@ module RubyAMI
         EventMachine::start_server '127.0.0.1', port, ServerMock
 
         # Stream connection
-        EM.connect('127.0.0.1', port, Stream, @client, 'username', 'pass', @events) { |c| @stream = c }
+        EM.connect('127.0.0.1', port, Stream, lambda { |m| client.message_received m }) {|c| @stream = c}
+
+        fake_client.call if fake_client.respond_to? :call
       }
     end
 
+    def expect_connected_event
+      client.expects(:message_received).with do |e|
+        e.should be_a Stream::Connected
+      end
+    end
+
     it 'can be started' do
-      client = mock
-      EM.expects(:connect).with do |*parms|
-        parms[0].should == 'example.com'
-        parms[1].should == 1234
-        parms[2].should == Stream
-        parms[3].should == client
-        parms[4].should == 'username'
-        parms[5].should == 'password'
-        parms[6].should == true
+      EM.expects(:connect).with do |*params|
+        params[0].should == 'example.com'
+        params[1].should == 1234
+        params[2].should == Stream
+        params[3].should be_a Proc
       end
 
-      Stream.start client, 'example.com', 1234, 'username', 'password', true
+      Stream.start('example.com', 1234, lambda {})
     end
 
     describe "after connection" do
       it "should be started" do
-        mocked_server(1) do |val, server|
+        expect_connected_event
+        mocked_server(0) do |val, server|
           @stream.started?.should be_true
         end
       end
 
-      it "logs in" do
-        @client = mock
-        @client.expects(:on_stream_ready).with do |r|
-          r.should be_a Stream
-          r.should be_ready
-        end
-        mocked_server(1) do |val, server|
-          val.should == Action.new('Login', 'Username' => 'username', 'Secret' => 'pass', 'Events' => 'On').to_s
-          server.send_data <<-RESPONSE
-Response: Success
-ActionID: actionid
-Message: Authentication accepted
-
-          RESPONSE
-        end
-      end
-
-      describe "with events turned off" do
-        before { @events = false }
-
-        it "logs in" do
-          @client = mock
-          @client.expects(:on_stream_ready).with do |r|
-            r.should be_a Stream
-            r.should be_ready
-          end
-          mocked_server(1) do |val, server|
-            val.should == Action.new('Login', 'Username' => 'username', 'Secret' => 'pass', 'Events' => 'Off').to_s
-            server.send_data <<-RESPONSE
-Response: Success
-ActionID: actionid
-Message: Authentication accepted
-
-            RESPONSE
-          end
+      it "can send a command" do
+        expect_connected_event
+        action = Action.new('Command', 'Command' => 'RECORD FILE evil', 'ActionID' => 666, 'Events' => 'On')
+        mocked_server(1, lambda { @stream.send_action action }) do |val, server|
+          val.should == action.to_s
         end
       end
     end
 
     it 'sends events to the client when the stream is ready' do
-      @client = mock
-      @client.expects(:message_received).with do |e|
-        EM.stop
-        e.should be_a Event
-        e.name.should == 'Hangup'
+      client.expects(:message_received).twice.with do |e|
+        if @connected
+          EM.stop
+          e.should be_a Event
+          e.name.should == 'Hangup'
+          e['Channel'].should == 'SIP/101-3f3f'
+          e['Uniqueid'].should == '1094154427.10'
+          e['Cause'].should == '0'
+        else
+          e.should be_a Stream::Connected
+          @connected = true
+        end
       end
 
-      mocked_server(1) do |val, server|
+      mocked_server(1, lambda { @stream.send_data 'Foo' }) do |val, server|
         server.send_data <<-EVENT
 Event: Hangup
 Channel: SIP/101-3f3f
@@ -115,14 +97,19 @@ Cause: 0
     end
 
     it 'sends responses to the client when the stream is ready' do
-      @client = mock
-      @client.expects(:message_received).with do |r|
-        EM.stop
-        r.should be_a Response
-        r['ActionID'].should == 'ee33eru2398fjj290'
+      client.expects(:message_received).twice.with do |r|
+        if @connected
+          EM.stop
+          r.should be_a Response
+          r['ActionID'].should == 'ee33eru2398fjj290'
+          r['Message'].should == 'Authentication accepted'
+        else
+          r.should be_a Stream::Connected
+          @connected = true
+        end
       end
 
-      mocked_server(1) do |val, server|
+      mocked_server(1, lambda { @stream.send_data 'Foo' }) do |val, server|
         server.send_data <<-EVENT
 Response: Success
 ActionID: ee33eru2398fjj290
@@ -132,12 +119,33 @@ Message: Authentication accepted
       end
     end
 
-    it 'puts itself in the stopped state and calls @client.unbind when unbound' do
-      @client = mock
-      @client.expects(:unbind).at_least_once
+    it 'sends error to the client when the stream is ready and a bad command was send' do
+      client.expects(:message_received).twice.with do |r|
+        if @connected
+          EM.stop
+          r.should be_a Error
+          r['ActionID'].should == 'ee33eru2398fjj290'
+          r['Message'].should == 'You stupid git'
+        else
+          r.should be_a Stream::Connected
+          @connected = true
+        end
+      end
 
+      mocked_server(1, lambda { @stream.send_data 'Foo' }) do |val, server|
+        server.send_data <<-EVENT
+Response: Error
+ActionID: ee33eru2398fjj290
+Message: You stupid git
+
+        EVENT
+      end
+    end
+
+    it 'puts itself in the stopped state and calls @client.unbind when unbound' do
       started = false
-      mocked_server(1) do |val, server|
+      expect_connected_event
+      mocked_server(0) do |val, server|
         EM.stop
         @stream.stopped?.should be false
         @stream.unbind

@@ -1,16 +1,16 @@
 module RubyAMI
   class Stream < EventMachine::Connection
-    def self.start(client, host, port, username, pass, events, logger = nil)
-      EM.connect host, port, self, client, username, pass, events, logger
+    Connected = Class.new
+
+    def self.start(host, port, event_callback)
+      EM.connect host, port, self, event_callback
     end
 
-    attr_reader :login_action
-
-    def initialize(client, username, password, events = true, logger = nil)
+    def initialize(event_callback)
       super()
-      @client, @username, @password, @events = client, username, password, events.nil? ? true : events
-      @logger = logger || Logger.new($stdout)
-      @logger.level = Logger::DEBUG
+      @event_callback = event_callback
+      @logger = Logger.new($stdout)
+      @logger.level = Logger::FATAL
       @logger.debug "Starting up..."
       @lexer = Lexer.new self
       @sent_messages_lock = Mutex.new
@@ -23,18 +23,13 @@ module RubyAMI
 
     def post_init
       @state = :started
-      @login_action = send_action "Login", "Username" => @username, "Secret" => @password, 'Events' => @events ? 'On' : 'Off' do |action|
-        @logger.debug "Handling login response..."
-        @state = :ready
-        @client.on_stream_ready self
-      end
+      @event_callback.call Connected.new
     end
 
-    def send_action(action_name, headers = {}, &block)
-      Action.new(action_name, headers, &block).tap do |action|
-        @logger.debug "[SEND] #{action.to_s}"
-        send_data action.to_s
-      end
+    def send_action(action)
+      @logger.debug "[SEND] #{action.to_s}"
+      @action = action
+      send_data action.to_s
     end
 
     def receive_data(data)
@@ -44,19 +39,15 @@ module RubyAMI
 
     def message_received(message)
       @logger.debug "[RECV] #{message.inspect}"
-      if message.action_id == @login_action.action_id
-        @logger.debug "Login response received: #{message.inspect}"
-        @login_action.response = message
-      else
-        @client.message_received message
-      end
+      @event_callback.call message
     end
+
+    alias :error_received :message_received
 
     # Called by EM when the connection is closed
     # @private
     def unbind
       @state = :stopped
-      @client.unbind
     end
   end
 end
