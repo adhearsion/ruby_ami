@@ -93,6 +93,13 @@ module RubyAMI
       end
       let(:expected_action) { Action.new action_name, headers }
 
+      let :expected_response do
+        Response.new.tap do |response|
+          response['ActionID'] = expected_action.action_id
+          response['Message'] = 'Action completed'
+        end
+      end
+
       let(:mock_actions_stream) { mock 'Actions Stream' }
 
       before do
@@ -106,12 +113,35 @@ module RubyAMI
         subject.send_action action_name, headers
       end
 
+      describe 'forcibly for testing' do
+        before do
+          subject.actions_stream.expects(:send_action).with expected_action
+          subject._send_action expected_action
+        end
+
+        it 'should mark the action sent' do
+          expected_action.should be_sent
+        end
+
+        describe 'when a response is received' do
+          before { subject.handle_message expected_response }
+
+          it 'should be set on the action' do
+            expected_action.response.should be expected_response
+          end
+
+          it 'should know its action' do
+            expected_response.action.should be expected_action
+          end
+        end
+      end
+
       describe 'from the queue' do
         it 'should send actions to the stream and set their responses' do
           subject.actions_stream.expects(:send_action).with expected_action
           subject.handle_message Stream::Connected.new
 
-          send_thread = Thread.new do
+          Thread.new do
             GirlFriday::WorkQueue.immediate!
             subject.send_action expected_action
             GirlFriday::WorkQueue.queue!
@@ -119,17 +149,8 @@ module RubyAMI
 
           sleep 0.1
 
-          response = Response.new
-          response['ActionID'] = expected_action.action_id
-          response['Message'] = 'Action completed'
-
-          expected_action.should be_sent
-
-          subject.handle_message response
-          send_thread.join
-          expected_action.response.should be response
-
-          expected_action.should be_complete
+          subject.handle_message expected_response
+          expected_action.response.should be expected_response
         end
 
         it 'should not send another action if the first action has not yet received a response' do

@@ -5,13 +5,17 @@ module RubyAMI
     def initialize(options)
       @options          = options
       @state            = :stopped
-      @pending_actions  = {}
 
       @actions_write_blocker = CountDownLatch.new 1
+
+      @pending_actions  = {}
+      @sent_actions     = {}
+      @actions_lock     = Mutex.new
 
       @action_queue = GirlFriday::WorkQueue.new(:actions, :size => 1, :error_handler => ErrorHandler) do |action|
         @actions_write_blocker.wait
         _send_action action
+        action.response
       end
 
       @message_processor = GirlFriday::WorkQueue.new(:messages, :size => 2, :error_handler => ErrorHandler) do |message|
@@ -38,7 +42,7 @@ module RubyAMI
 
     def send_action(action, headers = {}, &block)
       (action.is_a?(Action) ? action : Action.new(action, headers, &block)).tap do |action|
-        @pending_actions[action.action_id] = action
+        register_pending_action action
         action_queue << action
       end
     end
@@ -49,7 +53,13 @@ module RubyAMI
         start_writing_actions
         login_actions
       when Response
-        @pending_actions.delete(message.action_id).response = message
+        action = sent_action_with_id message.action_id
+        if action
+          message.action = action
+          action.response = message
+        else
+          raise "Received an AMI response with an unrecognized ActionID!! This may be an bug! #{message.inspect}"
+        end
       end
     end
 
@@ -57,12 +67,31 @@ module RubyAMI
       login_events if event.is_a? Stream::Connected
     end
 
-    private
-
     def _send_action(action)
+      transition_action_to_sent action
       actions_stream.send_action action
       action.state = :sent
-      action.response
+    end
+
+    private
+
+    def register_pending_action(action)
+      @actions_lock.synchronize do
+        @pending_actions[action.action_id] = action
+      end
+    end
+
+    def transition_action_to_sent(action)
+      @actions_lock.synchronize do
+        @pending_actions.delete action.action_id
+        @sent_actions[action.action_id] = action
+      end
+    end
+
+    def sent_action_with_id(action_id)
+      @actions_lock.synchronize do
+        @sent_actions.delete action_id
+      end
     end
 
     def start_writing_actions
