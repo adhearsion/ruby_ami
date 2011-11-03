@@ -110,7 +110,7 @@ module RubyAMI
     end
 
     def login_actions
-      @action_queue << login_action
+      send_action login_action
     end
 
     def login_events
