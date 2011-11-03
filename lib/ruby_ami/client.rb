@@ -34,7 +34,7 @@ module RubyAMI
 
     def start
       EventMachine.run do
-        yield
+        yield if block_given?
         @events_stream  = start_stream lambda { |event| @event_processor << event }
         @actions_stream = start_stream lambda { |message| @message_processor << message }
         @state = :started
