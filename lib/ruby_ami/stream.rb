@@ -13,8 +13,6 @@ module RubyAMI
       @logger.level = Logger::FATAL
       @logger.debug "Starting up..."
       @lexer = Lexer.new self
-      @sent_messages_lock = Mutex.new
-      @sent_messages = {}
     end
 
     [:started, :stopped, :ready].each do |state|
@@ -28,7 +26,6 @@ module RubyAMI
 
     def send_action(action)
       @logger.debug "[SEND] #{action.to_s}"
-      @action = action
       send_data action.to_s
     end
 
