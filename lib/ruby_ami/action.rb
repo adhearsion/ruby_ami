@@ -81,6 +81,7 @@ module RubyAMI
     end
 
     def response=(other)
+      @state = :complete
       @response.resource = other
       @response_callback.call response if @response_callback
     end

@@ -5,7 +5,11 @@ module RubyAMI
     let(:name) { 'foobar' }
     let(:headers) { {'foo' => 'bar'} }
 
-    subject { Action.new name, headers }
+    subject do
+      Action.new name, headers do |response|
+        @foo = response
+      end
+    end
 
     it { should be_new }
 
@@ -55,6 +59,19 @@ module RubyAMI
     it 'should be able to be marked as complete' do
       subject.state = :complete
       subject.should be_complete
+    end
+
+    describe 'setting the response' do
+      let(:response) { :bar }
+
+      before { subject.response = response }
+
+      it { should be_complete }
+      its(:response) { should == response }
+
+      it 'should call the response callback with the response' do
+        @foo.should == response
+      end
     end
 
     describe 'comparison' do
