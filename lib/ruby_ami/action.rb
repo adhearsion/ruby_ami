@@ -10,7 +10,7 @@ module RubyAMI
     def initialize(name, headers = {}, &block)
       @name       = name.to_s.downcase.freeze
       @headers    = headers.stringify_keys.freeze
-      @action_id  = UUIDTools::UUID.random_create
+      @action_id  = UUIDTools::UUID.random_create.to_s
       @response   = FutureResource.new
       @response_callback = block
       @state      = :new
