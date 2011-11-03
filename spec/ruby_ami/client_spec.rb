@@ -124,13 +124,15 @@ module RubyAMI
         end
 
         describe 'when a response is received' do
-          before { subject.handle_message expected_response }
+          let(:receive_response) { subject.handle_message expected_response }
 
-          it 'should be set on the action' do
-            expected_action.response.should be expected_response
+          it 'should be sent to the action' do
+            expected_action.expects(:<<).once.with expected_response
+            receive_response
           end
 
           it 'should know its action' do
+            receive_response
             expected_response.action.should be expected_action
           end
         end

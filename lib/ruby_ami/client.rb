@@ -56,7 +56,7 @@ module RubyAMI
         action = sent_action_with_id message.action_id
         if action
           message.action = action
-          action.response = message
+          action << message
         else
           raise "Received an AMI response with an unrecognized ActionID!! This may be an bug! #{message.inspect}"
         end

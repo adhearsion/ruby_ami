@@ -86,6 +86,10 @@ module RubyAMI
       @response_callback.call response if @response_callback
     end
 
+    def <<(message)
+      self.response = message
+    end
+
     def eql?(other)
       to_s == other.to_s
     end

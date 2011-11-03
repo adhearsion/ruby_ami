@@ -61,6 +61,15 @@ module RubyAMI
       subject.should be_complete
     end
 
+    describe '#<<' do
+      let(:message) { :bar }
+
+      it 'should set the response' do
+        subject << message
+        subject.response.should be message
+      end
+    end
+
     describe 'setting the response' do
       let(:response) { :bar }
 
