@@ -2,12 +2,15 @@ require 'spec_helper'
 
 module RubyAMI
   describe Client do
+    let(:event_handler) { [] }
+
     let(:options) do
       {
         :server   => '127.0.0.1',
         :port     => 5038,
         :username => 'username',
-        :password => 'password'
+        :password => 'password',
+        :event_handler => lambda { |event| event_handler << event }
       }
     end
 
@@ -80,6 +83,15 @@ module RubyAMI
 
           subject.handle_event Stream::Connected.new
         end
+      end
+    end
+
+    describe 'when an event is received' do
+      let(:event) { Event.new 'foobar' }
+
+      it 'should call the event handler' do
+        subject.handle_event event
+        event_handler.should == [event]
       end
     end
 

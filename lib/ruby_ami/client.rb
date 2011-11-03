@@ -4,6 +4,7 @@ module RubyAMI
 
     def initialize(options)
       @options          = options
+      @event_handler    = @options[:event_handler]
       @state            = :stopped
 
       @actions_write_blocker = CountDownLatch.new 1
@@ -73,6 +74,7 @@ module RubyAMI
     end
 
     def handle_event(event)
+      @event_handler.call event if @event_handler.respond_to? :call
       login_events if event.is_a? Stream::Connected
     end
 
