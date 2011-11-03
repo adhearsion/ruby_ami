@@ -56,7 +56,7 @@ module RubyAMI
     describe "after connection" do
       it "should be started" do
         expect_connected_event
-        mocked_server(0) do |val, server|
+        mocked_server(1, lambda { @stream.send_data 'Foo' }) do |val, server|
           @stream.started?.should be_true
         end
       end
