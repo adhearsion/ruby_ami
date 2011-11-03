@@ -18,7 +18,7 @@ module RubyAMI
         action.response
       end
 
-      @message_processor = GirlFriday::WorkQueue.new(:messages, :size => 2, :error_handler => ErrorHandler) do |message|
+      @message_processor = GirlFriday::WorkQueue.new(:messages, :size => 1, :error_handler => ErrorHandler) do |message|
         handle_message message
       end
 
@@ -52,14 +52,23 @@ module RubyAMI
       when Stream::Connected
         start_writing_actions
         login_actions
+      when Event
+        action = @current_action_with_causal_events
+        raise StandardError, "Got an unexpected event on actions socket! This AMI command may have a multi-message response. Try making Adhearsion treat it as causal action #{message.inspect}" unless action
+        message.action = action
+        action << message
+        @current_action_with_causal_events = nil if action.complete?
       when Response
         action = sent_action_with_id message.action_id
-        if action
-          message.action = action
-          action << message
-        else
-          raise "Received an AMI response with an unrecognized ActionID!! This may be an bug! #{message.inspect}"
-        end
+        raise StandardError, "Received an AMI response with an unrecognized ActionID!! This may be an bug! #{message.inspect}" unless action
+        message.action = action
+
+        # By this point the write loop will already have started blocking by calling the response() method on the
+        # action. Because we must collect more events before we wake the write loop up again, let's create these
+        # instance variable which will needed when the subsequent causal events come in.
+        @current_action_with_causal_events = action if action.has_causal_events?
+
+        action << message
       end
     end
 

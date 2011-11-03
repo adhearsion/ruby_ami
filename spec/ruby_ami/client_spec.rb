@@ -123,9 +123,9 @@ module RubyAMI
           expected_action.should be_sent
         end
 
-        describe 'when a response is received' do
-          let(:receive_response) { subject.handle_message expected_response }
+        let(:receive_response) { subject.handle_message expected_response }
 
+        describe 'when a response is received' do
           it 'should be sent to the action' do
             expected_action.expects(:<<).once.with expected_response
             receive_response
@@ -134,6 +134,50 @@ module RubyAMI
           it 'should know its action' do
             receive_response
             expected_response.action.should be expected_action
+          end
+        end
+
+        describe 'when an event is received' do
+          let(:event) { Event.new 'foo' }
+
+          let(:receive_event) { subject.handle_message event }
+
+          context 'for a causal event' do
+            let(:expected_action) { Action.new 'Status' }
+
+            it 'should be sent to the action' do
+              expected_action.expects(:<<).once.with expected_response
+              expected_action.expects(:<<).once.with event
+              receive_response
+              receive_event
+            end
+
+            it 'should know its action' do
+              expected_action.stubs :<<
+              receive_response
+              receive_event
+              event.action.should be expected_action
+            end
+          end
+
+          context 'for a causal action which is complete' do
+            let(:expected_action) { Action.new 'Status' }
+
+            before do
+              expected_action.stubs(:complete?).returns true
+            end
+
+            it 'should raise an error' do
+              receive_response
+              receive_event
+              lambda { subject.handle_message Event.new('bar') }.should raise_error StandardError, /causal action/
+            end
+          end
+
+          context 'for a non-causal action' do
+            it 'should raise an error' do
+              lambda { receive_event }.should raise_error StandardError, /causal action/
+            end
           end
         end
       end

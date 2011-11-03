@@ -62,11 +62,58 @@ module RubyAMI
     end
 
     describe '#<<' do
-      let(:message) { :bar }
+      describe 'for a non-causal action' do
+        context 'with a response' do
+          let(:response) { Response.new }
 
-      it 'should set the response' do
-        subject << message
-        subject.response.should be message
+          it 'should set the response' do
+            subject << response
+            subject.response.should be response
+          end
+        end
+
+        context 'with an event' do
+          it 'should raise an error' do
+            lambda { subject << Event.new('foo') }.should raise_error StandardError, /causal action/
+          end
+        end
+      end
+
+      describe 'for a causal action' do
+        let(:name) { 'Status' }
+
+        context 'with a response' do
+          let(:message) { Response.new }
+
+          before { subject << message }
+
+          it { should_not be_complete }
+        end
+
+        context 'with an event' do
+          let(:event) { Event.new 'foo' }
+
+          before { subject << event }
+
+          its(:events) { should == [event] }
+        end
+
+        context 'with a terminating event' do
+          let(:response)  { Response.new }
+          let(:event)     { Event.new 'StatusComplete' }
+
+          before do
+            subject << response
+            subject.should_not be_complete
+            subject << event
+          end
+
+          its(:events) { should == [event] }
+
+          it { should be_complete }
+
+          its(:response) { should be response }
+        end
       end
     end
 

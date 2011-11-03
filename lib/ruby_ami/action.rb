@@ -14,6 +14,8 @@ module RubyAMI
       @response   = FutureResource.new
       @response_callback = block
       @state      = :new
+      @events     = []
+      @event_lock = Mutex.new
     end
 
     [:new, :sent, :complete].each do |state|
@@ -76,8 +78,8 @@ module RubyAMI
     # in. Once the response comes in, subsequent calls immediately return a reference to the ManagerInterfaceResponse
     # object.
     #
-    def response
-      @response.resource
+    def response(timeout = nil)
+      @response.resource timeout
     end
 
     def response=(other)
@@ -87,7 +89,26 @@ module RubyAMI
     end
 
     def <<(message)
-      self.response = message
+      case message
+      when Event
+        raise StandardError, 'This action should not trigger events. Maybe it is now a causal action? This is most likely a bug in RubyAMI' unless has_causal_events?
+        @event_lock.synchronize do
+          @events << message
+        end
+        self.response = @pending_response if message.name.downcase == causal_event_terminator_name
+      when Response
+        if has_causal_events?
+          @pending_response = message
+        else
+          self.response = message
+        end
+      end
+    end
+
+    def events
+      @event_lock.synchronize do
+        @events.dup
+      end
     end
 
     def eql?(other)
