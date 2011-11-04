@@ -1,6 +1,6 @@
 module RubyAMI
   class Error < StandardError
-    attr_accessor :message
+    attr_accessor :message, :action
 
     def initialize
       @headers = HashWithIndifferentAccess.new
@@ -12,6 +12,10 @@ module RubyAMI
 
     def []=(key,value)
       @headers[key] = value
+    end
+
+    def action_id
+      @headers['ActionID']
     end
   end
 end # RubyAMI

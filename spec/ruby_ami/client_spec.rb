@@ -185,6 +185,25 @@ module RubyAMI
           end
         end
 
+        describe 'when an error is received' do
+          let :expected_response do
+            Error.new.tap do |response|
+              response['ActionID'] = expected_action.action_id
+              response['Message'] = 'Action failed'
+            end
+          end
+
+          it 'should be sent to the action' do
+            expected_action.expects(:<<).once.with expected_response
+            receive_response
+          end
+
+          it 'should know its action' do
+            receive_response
+            expected_response.action.should be expected_action
+          end
+        end
+
         describe 'when an event is received' do
           let(:event) { Event.new 'foo' }
 

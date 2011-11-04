@@ -70,7 +70,7 @@ module RubyAMI
         message.action = action
         action << message
         @current_action_with_causal_events = nil if action.complete?
-      when Response
+      when Response, Error
         action = sent_action_with_id message.action_id
         raise StandardError, "Received an AMI response with an unrecognized ActionID!! This may be an bug! #{message.inspect}" unless action
         message.action = action
