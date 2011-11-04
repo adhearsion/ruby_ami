@@ -18,7 +18,11 @@ module RubyAMI
       @action_queue = GirlFriday::WorkQueue.new(:actions, :size => 1, :error_handler => ErrorHandler) do |action|
         @actions_write_blocker.wait
         _send_action action
-        action.response
+        begin
+          action.response
+        rescue RubyAMI::Error
+          nil
+        end
       end
 
       @message_processor = GirlFriday::WorkQueue.new(:messages, :size => 1, :error_handler => ErrorHandler) do |message|
@@ -86,7 +90,7 @@ module RubyAMI
 
     def handle_event(event)
       logger.trace "[RECV-EVENTS]: #{event.inspect}" if logger
-      @event_handler.call event if @event_handler.respond_to? :call
+      pass_event event
       case event
       when Stream::Connected
         login_events
@@ -107,6 +111,10 @@ module RubyAMI
     end
 
     private
+
+    def pass_event(event)
+      @event_handler.call event if @event_handler.respond_to? :call
+    end
 
     def register_pending_action(action)
       @actions_lock.synchronize do
@@ -136,7 +144,9 @@ module RubyAMI
     end
 
     def login_actions
-      send_action login_action
+      login_action do |response|
+        pass_event response if response.is_a? Error
+      end.tap { |action| send_action action }
     end
 
     def login_events
@@ -145,11 +155,12 @@ module RubyAMI
       end
     end
 
-    def login_action(events = 'Off')
+    def login_action(events = 'Off', &block)
       Action.new 'Login',
                  'Username' => options[:username],
                  'Secret'   => options[:password],
-                 'Events'   => events
+                 'Events'   => events,
+                 &block
     end
 
     def start_stream(callback)
@@ -168,7 +179,7 @@ module RubyAMI
 
     class ErrorHandler
       def handle(error)
-        puts error
+        puts error.message
         puts error.backtrace.join("\n")
       end
     end
