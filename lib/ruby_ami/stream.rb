@@ -1,6 +1,15 @@
 module RubyAMI
   class Stream < EventMachine::Connection
-    Connected = Class.new
+    class ConnectionStatus
+      def eql?(other)
+        other.is_a? self.class
+      end
+
+      alias :== :eql?
+    end
+
+    Connected = Class.new ConnectionStatus
+    Disconnected = Class.new ConnectionStatus
 
     def self.start(host, port, event_callback)
       EM.connect host, port, self, event_callback
@@ -45,6 +54,7 @@ module RubyAMI
     # @private
     def unbind
       @state = :stopped
+      @event_callback.call Disconnected.new
     end
   end
 end
