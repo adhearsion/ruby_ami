@@ -122,12 +122,12 @@ module RubyAMI
     def login_action(events = 'Off')
       Action.new 'Login',
                  'Username' => options[:username],
-                 'Secret' => options[:password],
-                 'Events' => events
+                 'Secret'   => options[:password],
+                 'Events'   => events
     end
 
     def start_stream(callback)
-      Stream.start @options[:server], @options[:port], callback
+      Stream.start @options[:host], @options[:port], callback
     end
 
     class ErrorHandler
