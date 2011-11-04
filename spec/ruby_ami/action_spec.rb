@@ -72,6 +72,15 @@ module RubyAMI
           end
         end
 
+        context 'with an error' do
+          let(:error) { Error.new }
+
+          it 'should set the response and raise the error when reading it' do
+            subject << error
+            lambda { subject.response }.should raise_error error
+          end
+        end
+
         context 'with an event' do
           it 'should raise an error' do
             lambda { subject << Event.new('foo') }.should raise_error StandardError, /causal action/

@@ -79,17 +79,21 @@ module RubyAMI
     # object.
     #
     def response(timeout = nil)
-      @response.resource timeout
+      @response.resource(timeout).tap do |resp|
+        raise resp if resp.is_a? Exception
+      end
     end
 
     def response=(other)
       @state = :complete
       @response.resource = other
-      @response_callback.call response if @response_callback
+      @response_callback.call other if @response_callback
     end
 
     def <<(message)
       case message
+      when Error
+        self.response = message
       when Event
         raise StandardError, 'This action should not trigger events. Maybe it is now a causal action? This is most likely a bug in RubyAMI' unless has_causal_events?
         @event_lock.synchronize do
