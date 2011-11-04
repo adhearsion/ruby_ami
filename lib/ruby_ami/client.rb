@@ -4,6 +4,8 @@ module RubyAMI
 
     def initialize(options)
       @options          = options
+      @logger           = options[:logger]
+      @logger.level     = options[:log_level] || Logger::DEBUG if @logger
       @event_handler    = @options[:event_handler]
       @state            = :stopped
 
@@ -43,12 +45,14 @@ module RubyAMI
 
     def send_action(action, headers = {}, &block)
       (action.is_a?(Action) ? action : Action.new(action, headers, &block)).tap do |action|
+        logger.trace "[QUEUE]: #{action.inspect}" if logger
         register_pending_action action
         action_queue << action
       end
     end
 
     def handle_message(message)
+      logger.trace "[RECV-ACTIONS]: #{message.inspect}" if logger
       case message
       when Stream::Connected
         start_writing_actions
@@ -74,11 +78,13 @@ module RubyAMI
     end
 
     def handle_event(event)
+      logger.trace "[RECV-EVENTS]: #{event.inspect}" if logger
       @event_handler.call event if @event_handler.respond_to? :call
       login_events if event.is_a? Stream::Connected
     end
 
     def _send_action(action)
+      logger.trace "[SEND]: #{action.inspect}" if logger
       transition_action_to_sent action
       actions_stream.send_action action
       action.state = :sent
@@ -128,6 +134,12 @@ module RubyAMI
 
     def start_stream(callback)
       Stream.start @options[:host], @options[:port], callback
+    end
+
+    def logger
+      super
+    rescue NoMethodError
+      @logger
     end
 
     class ErrorHandler
