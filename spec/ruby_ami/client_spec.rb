@@ -7,7 +7,7 @@ module RubyAMI
     let(:options) do
       {
         :server   => '127.0.0.1',
-        :port     => 5038,
+        :port     => 50000 - rand(1000),
         :username => 'username',
         :password => 'password',
         :event_handler => lambda { |event| event_handler << event }
@@ -24,7 +24,9 @@ module RubyAMI
 
     describe 'starting up' do
       before do
+        MockServer.any_instance.stubs :receive_data
         subject.start do
+          EM.start_server options[:server], options[:port], ServerMock
           EM.add_timer(0.5) { EM.stop if EM.reactor_running? }
         end
       end
