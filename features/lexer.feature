@@ -72,6 +72,7 @@ Feature: Lexing AMI
     And 1 message should have been received
     And the 'follows' body of 1 message received should equal with_colon_after_first_line
 
+  @wip
   Scenario: Lexing an immediate response with a colon in it.
     Given a new lexer
     And an immediate response with text "markq        has 0 calls (max unlimited) in 'ringall' strategy (0s holdtime), W:0, C:0, A:0, SL:0.0% within 0s\r\n   No Members\r\n   No Callers\r\n\r\n\r\n\r\n"
