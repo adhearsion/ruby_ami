@@ -43,6 +43,10 @@ module RubyAMI
       end
     end
 
+    def stop
+      streams.each { |s| s.close_connection_after_writing }
+    end
+
     def send_action(action, headers = {}, &block)
       (action.is_a?(Action) ? action : Action.new(action, headers, &block)).tap do |action|
         logger.trace "[QUEUE]: #{action.inspect}" if logger
@@ -59,6 +63,7 @@ module RubyAMI
         login_actions
       when Stream::Disconnected
         stop_writing_actions
+        unbind
       when Event
         action = @current_action_with_causal_events
         raise StandardError, "Got an unexpected event on actions socket! This AMI command may have a multi-message response. Try making Adhearsion treat it as causal action #{message.inspect}" unless action
@@ -82,7 +87,12 @@ module RubyAMI
     def handle_event(event)
       logger.trace "[RECV-EVENTS]: #{event.inspect}" if logger
       @event_handler.call event if @event_handler.respond_to? :call
-      login_events if event.is_a? Stream::Connected
+      case event
+      when Stream::Connected
+        login_events
+      when Stream::Disconnected
+        unbind
+      end
     end
 
     def _send_action(action)
@@ -90,6 +100,10 @@ module RubyAMI
       transition_action_to_sent action
       actions_stream.send_action action
       action.state = :sent
+    end
+
+    def unbind
+      EM.reactor_running? && EM.stop
     end
 
     private
@@ -146,6 +160,10 @@ module RubyAMI
       super
     rescue NoMethodError
       @logger
+    end
+
+    def streams
+      [actions_stream, events_stream]
     end
 
     class ErrorHandler

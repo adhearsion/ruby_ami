@@ -88,6 +88,13 @@ module RubyAMI
       end
     end
 
+    describe 'when the events stream disconnects' do
+      it 'should unbind' do
+        subject.expects(:unbind).once
+        subject.handle_event Stream::Disconnected.new
+      end
+    end
+
     describe 'when the actions stream disconnects' do
       before do
         Action.any_instance.stubs(:response).returns(true)
@@ -107,6 +114,11 @@ module RubyAMI
         sleep 2
 
         action.should be_new
+      end
+
+      it 'should unbind' do
+        subject.expects(:unbind).once
+        subject.handle_message Stream::Disconnected.new
       end
     end
 
@@ -251,6 +263,41 @@ module RubyAMI
           actions.should have(2).actions
           actions[0].should be_sent
           actions[1].should be_new
+        end
+      end
+    end
+
+    describe '#stop' do
+      let(:mock_actions_stream) { mock 'Actions Stream' }
+      let(:mock_events_stream) { mock 'Events Stream' }
+
+      let(:streams) { [mock_actions_stream, mock_events_stream] }
+
+      before do
+        subject.stubs(:actions_stream).returns mock_actions_stream
+        subject.stubs(:events_stream).returns mock_events_stream
+      end
+
+      it 'should close both streams' do
+        streams.each { |s| s.expects :close_connection_after_writing }
+        subject.stop
+      end
+    end
+
+    describe '#unbind' do
+      context 'if EM is running' do
+        it 'shuts down EM' do
+          EM.expects(:reactor_running?).returns true
+          EM.expects(:stop)
+          subject.unbind
+        end
+      end
+
+      context 'if EM is not running' do
+        it 'does nothing' do
+          EM.expects(:reactor_running?).returns false
+          EM.expects(:stop).never
+          subject.unbind
         end
       end
     end
