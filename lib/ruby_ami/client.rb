@@ -9,7 +9,7 @@ module RubyAMI
       @event_handler    = @options[:event_handler]
       @state            = :stopped
 
-      @actions_write_blocker = CountDownLatch.new 1
+      stop_writing_actions
 
       @pending_actions  = {}
       @sent_actions     = {}
@@ -57,6 +57,8 @@ module RubyAMI
       when Stream::Connected
         start_writing_actions
         login_actions
+      when Stream::Disconnected
+        stop_writing_actions
       when Event
         action = @current_action_with_causal_events
         raise StandardError, "Got an unexpected event on actions socket! This AMI command may have a multi-message response. Try making Adhearsion treat it as causal action #{message.inspect}" unless action
@@ -113,6 +115,10 @@ module RubyAMI
 
     def start_writing_actions
       @actions_write_blocker.countdown!
+    end
+
+    def stop_writing_actions
+      @actions_write_blocker = CountDownLatch.new 1
     end
 
     def login_actions

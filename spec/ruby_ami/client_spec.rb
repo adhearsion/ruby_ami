@@ -88,6 +88,28 @@ module RubyAMI
       end
     end
 
+    describe 'when the actions stream disconnects' do
+      before do
+        Action.any_instance.stubs(:response).returns(true)
+      end
+
+      it 'should prevent further actions being sent' do
+        subject.expects(:_send_action).once
+
+        GirlFriday::WorkQueue.immediate!
+        subject.handle_message Stream::Connected.new
+        GirlFriday::WorkQueue.queue!
+        subject.handle_message Stream::Disconnected.new
+
+        action = Action.new 'foo'
+        subject.send_action action
+
+        sleep 2
+
+        action.should be_new
+      end
+    end
+
     describe 'when an event is received' do
       let(:event) { Event.new 'foobar' }
 
