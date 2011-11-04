@@ -1,3 +1,3 @@
-module RubyAmi
-  VERSION = "0.0.1"
+module RubyAMI
+  VERSION = "0.1.0"
 end
