@@ -15,6 +15,10 @@
   ruby_ami/metaprogramming
 }.each { |f| require f }
 
+class Logger
+  alias :trace :debug
+end
+
 module RubyAMI
   extend ActiveSupport::Autoload
 
