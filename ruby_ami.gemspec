@@ -23,6 +23,8 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency %q<eventmachine>, [">= 0"]
   s.add_runtime_dependency %q<future-resource>, [">= 0"]
   s.add_runtime_dependency %q<girl_friday>, [">= 0"]
+  s.add_runtime_dependency %q<countdownlatch>, [">= 1.0.0"]
+  s.add_runtime_dependency %q<i18n>, [">= 0"]
 
   s.add_development_dependency %q<bundler>, ["~> 1.0.0"]
   s.add_development_dependency %q<rspec>, [">= 2.5.0"]
@@ -32,9 +34,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency %q<rcov>, [">= 0"]
   s.add_development_dependency %q<rake>, [">= 0"]
   s.add_development_dependency %q<mocha>, [">= 0"]
-  s.add_development_dependency %q<i18n>, [">= 0"]
   s.add_development_dependency %q<simplecov>, [">= 0"]
   s.add_development_dependency %q<simplecov-rcov>, [">= 0"]
-  s.add_development_dependency %q<countdownlatch>, [">= 1.0.0"]
   s.add_development_dependency %q<guard-rspec>
 end
