@@ -84,6 +84,8 @@ module RubyAMI
           end
 
           subject.handle_event Stream::Connected.new
+
+          event_handler.should be_empty
         end
       end
     end
@@ -92,6 +94,7 @@ module RubyAMI
       it 'should unbind' do
         subject.expects(:unbind).once
         subject.handle_event Stream::Disconnected.new
+        event_handler.should be_empty
       end
     end
 

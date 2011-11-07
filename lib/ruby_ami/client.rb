@@ -90,12 +90,13 @@ module RubyAMI
 
     def handle_event(event)
       logger.trace "[RECV-EVENTS]: #{event.inspect}" if logger
-      pass_event event
       case event
       when Stream::Connected
         login_events
       when Stream::Disconnected
         unbind
+      else
+        pass_event event
       end
     end
 
