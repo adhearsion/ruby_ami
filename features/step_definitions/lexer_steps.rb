@@ -134,12 +134,12 @@ end
 Then "the protocol should have lexed without syntax errors" do
   current_pointer     = @lexer.send(:instance_variable_get, :@current_pointer)
   data_ending_pointer = @lexer.send(:instance_variable_get, :@data_ending_pointer)
-  current_pointer.should equal(data_ending_pointer)
+  current_pointer.should == data_ending_pointer
   @lexer.syntax_errors.size.should equal(0)
 end
 
 Then /^the protocol should have lexed with (\d+) syntax errors?$/ do |number|
-  @lexer.syntax_errors.size.should equal(number.to_i)
+  @lexer.syntax_errors.size.should == number.to_i
 end
 
 Then "the syntax error fixture named $name should have been encountered" do |name|
@@ -148,7 +148,7 @@ Then "the syntax error fixture named $name should have been encountered" do |nam
 end
 
 Then /^(\d+) messages? should have been received$/ do |number_received|
-  @lexer.received_messages.size.should equal(number_received.to_i)
+  @lexer.received_messages.size.should == number_received.to_i
 end
 
 Then /^the 'follows' body of (\d+) messages? received should equal (\w+)$/ do |number, method_name|
@@ -156,7 +156,7 @@ Then /^the 'follows' body of (\d+) messages? received should equal (\w+)$/ do |n
   @lexer.received_messages.should_not be_empty
   @lexer.received_messages.select do |message|
     message.text_body == multi_line_response
-  end.size.should eql(number.to_i)
+  end.size.should == number.to_i
 end
 
 Then "the version should be set to $version" do |version|
