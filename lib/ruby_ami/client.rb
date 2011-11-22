@@ -175,7 +175,7 @@ module RubyAMI
     end
 
     def streams
-      [actions_stream, events_stream]
+      [actions_stream, events_stream].compact
     end
 
     class ErrorHandler
