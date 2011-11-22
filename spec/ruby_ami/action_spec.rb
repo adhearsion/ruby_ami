@@ -73,11 +73,11 @@ module RubyAMI
         end
 
         context 'with an error' do
-          let(:error) { Error.new }
+          let(:error) { Error.new.tap { |e| e.message = 'AMI error' } }
 
           it 'should set the response and raise the error when reading it' do
             subject << error
-            lambda { subject.response }.should raise_error error
+            lambda { subject.response }.should raise_error Error, 'AMI error'
           end
         end
 

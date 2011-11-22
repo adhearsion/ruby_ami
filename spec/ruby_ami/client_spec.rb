@@ -22,6 +22,8 @@ module RubyAMI
 
     its(:action_queue) { should be_a GirlFriday::WorkQueue }
 
+    its(:streams) { should == [] }
+
     describe 'starting up' do
       before do
         MockServer.any_instance.stubs :receive_data
