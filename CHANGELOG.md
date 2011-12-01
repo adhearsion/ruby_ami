@@ -1,5 +1,8 @@
 # develop
 
+# 0.1.4 - 2011-12-1
+  * Bugfix: Actions connection should login with Events: System. This ensures that the FullyBooted event will come through on both connections.
+
 # 0.1.3 - 2011-11-22
   * Bugfix: A client can now safely be shut down before it is started, and only performs actions on live streams.
   * Bugfix: RubyAMI::Error#inspect now shows an error's message and headers
