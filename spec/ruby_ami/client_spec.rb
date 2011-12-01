@@ -47,7 +47,7 @@ module RubyAMI
           Action.new 'Login',
                      'Username' => 'username',
                      'Secret'   => 'password',
-                     'Events'   => 'Off'
+                     'Events'   => 'System'
         end
 
         before do
