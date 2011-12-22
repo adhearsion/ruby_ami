@@ -63,17 +63,24 @@ module RubyAMI
       logger.trace "[RECV-ACTIONS]: #{message.inspect}" if logger
       case message
       when Stream::Connected
-        start_writing_actions
         login_actions
       when Stream::Disconnected
         stop_writing_actions
         unbind
       when Event
         action = @current_action_with_causal_events
-        raise StandardError, "Got an unexpected event on actions socket! This AMI command may have a multi-message response. Try making Adhearsion treat it as causal action #{message.inspect}" unless action
-        message.action = action
-        action << message
-        @current_action_with_causal_events = nil if action.complete?
+        if action
+          message.action = action
+          action << message
+          @current_action_with_causal_events = nil if action.complete?
+        else
+          if message.name == 'FullyBooted'
+            pass_event message
+            start_writing_actions
+          else
+            raise StandardError, "Got an unexpected event on actions socket! This AMI command may have a multi-message response. Try making Adhearsion treat it as causal action #{message.inspect}"
+          end
+        end
       when Response, Error
         action = sent_action_with_id message.action_id
         raise StandardError, "Received an AMI response with an unrecognized ActionID!! This may be an bug! #{message.inspect}" unless action
@@ -105,6 +112,7 @@ module RubyAMI
       transition_action_to_sent action
       actions_stream.send_action action
       action.state = :sent
+      action
     end
 
     def unbind
@@ -145,22 +153,26 @@ module RubyAMI
     end
 
     def login_actions
-      login_action do |response|
+      action = login_action do |response|
         pass_event response if response.is_a? Error
-      end.tap { |action| send_action action }
+        send_action 'Events', 'EventMask' => 'Off'
+      end
+
+      register_pending_action action
+      Thread.new { _send_action action }
     end
 
     def login_events
-      login_action('On').tap do |action|
+      login_action.tap do |action|
         events_stream.send_action action
       end
     end
 
-    def login_action(events = 'System', &block)
+    def login_action(&block)
       Action.new 'Login',
                  'Username' => options[:username],
                  'Secret'   => options[:password],
-                 'Events'   => events,
+                 'Events'   => 'On',
                  &block
     end
 
