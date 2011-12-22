@@ -1,5 +1,12 @@
 # develop
 
+# 0.1.5 - 2011-12-22
+  * Bugfix: Work consistently all all versions of Asterisk
+    * Both 1.8 and 10
+    * Login actions connection with events turned on (in order to get FullyBooted event)
+    * Turn events off immediately after fully-booted
+    * Pass FullyBooted events from the actions connection up to the event handler
+
 # 0.1.4 - 2011-12-1
   * Bugfix: Actions connection should login with Events: System. This ensures that the FullyBooted event will come through on both connections.
 

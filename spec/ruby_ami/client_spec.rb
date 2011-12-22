@@ -47,7 +47,7 @@ module RubyAMI
           Action.new 'Login',
                      'Username' => 'username',
                      'Secret'   => 'password',
-                     'Events'   => 'System'
+                     'Events'   => 'On'
         end
 
         before do
@@ -60,9 +60,7 @@ module RubyAMI
             action.to_s.should == expected_login_action.to_s
           end
 
-          GirlFriday::WorkQueue.immediate!
-          subject.handle_message Stream::Connected.new
-          GirlFriday::WorkQueue.queue!
+          subject.handle_message(Stream::Connected.new).join
         end
       end
 
@@ -81,9 +79,7 @@ module RubyAMI
         end
 
         it 'should log in' do
-          mock_events_stream.expects(:send_action).with do |action|
-            action.to_s.should == expected_login_action.to_s
-          end
+          mock_events_stream.expects(:send_action).with expected_login_action
 
           subject.handle_event Stream::Connected.new
 
@@ -133,6 +129,47 @@ module RubyAMI
       it 'should call the event handler' do
         subject.handle_event event
         event_handler.should == [event]
+      end
+    end
+
+    describe 'when a FullyBooted event is received on the actions connection' do
+      let(:event) { Event.new 'FullyBooted' }
+
+      let(:mock_actions_stream) { mock 'Actions Stream' }
+
+      let :expected_login_action do
+        Action.new 'Login',
+                   'Username' => 'username',
+                   'Secret'   => 'password',
+                   'Events'   => 'On'
+      end
+
+      let :expected_events_off_action do
+        Action.new 'Events', 'EventMask' => 'Off'
+      end
+
+      it 'should call the event handler' do
+        subject.handle_message event
+        event_handler.should == [event]
+      end
+
+      it 'should begin writing actions' do
+        subject.expects(:start_writing_actions).once
+        subject.handle_message event
+      end
+
+      it 'should turn off events' do
+        Action.any_instance.stubs(:response).returns true
+        subject.stubs(:actions_stream).returns mock_actions_stream
+
+        mock_actions_stream.expects(:send_action).once.with expected_login_action
+        mock_actions_stream.expects(:send_action).once.with expected_events_off_action
+
+        login_action = subject.handle_message(Stream::Connected.new).join
+        login_action.value.response = true
+
+        subject.handle_message event
+        sleep 0.5
       end
     end
 
@@ -257,7 +294,7 @@ module RubyAMI
       describe 'from the queue' do
         it 'should send actions to the stream and set their responses' do
           subject.actions_stream.expects(:send_action).with expected_action
-          subject.handle_message Stream::Connected.new
+          subject.handle_message Event.new('FullyBooted')
 
           Thread.new do
             GirlFriday::WorkQueue.immediate!
@@ -273,7 +310,7 @@ module RubyAMI
 
         it 'should not send another action if the first action has not yet received a response' do
           subject.actions_stream.expects(:send_action).once.with expected_action
-          subject.handle_message Stream::Connected.new
+          subject.handle_message Event.new('FullyBooted')
           actions = []
 
           2.times do
