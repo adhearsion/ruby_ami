@@ -156,7 +156,7 @@ module RubyAMI
       end
     end
 
-    def login_action(events = 'System', &block)
+    def login_action(events = 'system', &block)
       Action.new 'Login',
                  'Username' => options[:username],
                  'Secret'   => options[:password],
