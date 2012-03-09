@@ -8,12 +8,6 @@ RSpec::Core::RakeTask.new(:spec) do |spec|
   spec.rspec_opts = '--color'
 end
 
-RSpec::Core::RakeTask.new(:rcov) do |spec|
-  spec.pattern = 'spec/**/*_spec.rb'
-  spec.rcov = true
-  spec.rspec_opts = '--color'
-end
-
 require 'cucumber'
 require 'cucumber/rake/task'
 require 'ci/reporter/rake/cucumber'
