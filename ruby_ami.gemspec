@@ -31,7 +31,6 @@ Gem::Specification.new do |s|
   s.add_development_dependency %q<cucumber>, [">= 0"]
   s.add_development_dependency %q<ci_reporter>, [">= 1.6.3"]
   s.add_development_dependency %q<yard>, ["~> 0.6.0"]
-  s.add_development_dependency %q<rcov>, [">= 0"]
   s.add_development_dependency %q<rake>, [">= 0"]
   s.add_development_dependency %q<mocha>, [">= 0"]
   s.add_development_dependency %q<simplecov>, [">= 0"]

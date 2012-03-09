@@ -1,9 +1,3 @@
-RAGEL_FILES = %w[lib/ruby_ami/lexer.rl.rb]
-
-def regenerate_ragel
-  `rake ragel`
-end
-
 FIXTURES = YAML.load_file File.dirname(__FILE__) + "/ami_fixtures.yml"
 
 def fixture(path, overrides = {})
