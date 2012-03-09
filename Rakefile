@@ -41,23 +41,21 @@ task :check_ragel_version do
   end
 end
 
-RAGEL_FILES = %w[lib/ruby_ami/lexer.rl.rb]
-
 desc "Used to regenerate the AMI source code files. Note: requires Ragel 6.3 or later be installed on your system"
 task :ragel => :check_ragel_version do
-  RAGEL_FILES.each do |ragel_file|
-    ruby_file = ragel_file.sub ".rl.rb", ".rb"
-    puts `ragel -n -R #{ragel_file} -o #{ruby_file} 2>&1`
-    raise "Failed generating code from Ragel file #{ragel_file}" if $?.to_i.nonzero?
-  end
+  run_ragel '-n -R'
 end
 
 desc "Generates a GraphVis document showing the Ragel state machine"
 task :visualize_ragel => :check_ragel_version do
-  RAGEL_FILES.each do |ragel_file|
-    base_name = File.basename ragel_file, ".rl.rb"
-    puts "ragel -V #{ragel_file} -o #{base_name}.dot 2>&1"
-    puts `ragel -V #{ragel_file} -o #{base_name}.dot 2>&1`
-    raise "Failed generating code from Ragel file #{ragel_file}" if $?.to_i.nonzero?
-  end
+  run_ragel '-V', 'dot'
+end
+
+def run_ragel(options = nil, extension = 'rb')
+  ragel_file = 'lib/ruby_ami/lexer.rl.rb'
+  base_file = ragel_file.sub ".rl.rb", ""
+  command = ["ragel", options, "#{ragel_file} -o #{base_file}.#{extension} 2>&1"].compact.join ' '
+  puts "Running command '#{command}'"
+  puts `#{command}`
+  raise "Failed generating code from Ragel file #{ragel_file}" if $?.to_i.nonzero?
 end
