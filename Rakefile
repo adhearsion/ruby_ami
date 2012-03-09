@@ -30,8 +30,9 @@ task :check_ragel_version do
   ragel_version_match = `ragel --version`.match /(\d)\.(\d)+/
   abort "Could not get Ragel version! Is it installed? You must have at least version 6.7" unless ragel_version_match
   big, small = ragel_version_match.captures.map &:to_i
+  puts "You're using Ragel v#{ragel_version_match[0]}"
   if big < 6 && small < 7
-    abort "Please upgrade Ragel! You're on version #{ragel_version_match[0]} and must be on 6.7 or later"
+    abort "Please upgrade Ragel! v6.7 or later is required"
   end
 end
 
