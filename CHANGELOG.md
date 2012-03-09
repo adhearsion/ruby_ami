@@ -1,5 +1,9 @@
 # develop
 
+# 1.0.0 - 2012-03-09
+  * Bugfix: Remove rcov
+  * Bump to 1.0.0 since we're in active use
+
 # 0.1.5 - 2011-12-22
   * Bugfix: Work consistently all all versions of Asterisk
     * Both 1.8 and 10
