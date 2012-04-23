@@ -1,4 +1,5 @@
 # develop
+  * Bugfix: Actions which do not receive a response within 10s will allow further actions to be executed
 
 # 1.0.0 - 2012-03-09
   * Bugfix: Remove rcov

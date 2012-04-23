@@ -19,7 +19,9 @@ module RubyAMI
         @actions_write_blocker.wait
         _send_action action
         begin
-          action.response
+          action.response 10
+        rescue Timeout::Error => e
+          logger.error "Timed out waiting for a response to #{action}"
         rescue RubyAMI::Error
           nil
         end
