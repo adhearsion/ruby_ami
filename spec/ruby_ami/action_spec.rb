@@ -159,5 +159,29 @@ module RubyAMI
 
       it { should_not == :foo }
     end
+
+    describe "#sync_timeout" do
+      it "should be 10 seconds" do
+        subject.sync_timeout.should be == 10
+      end
+
+      context "for an asynchronous Originate" do
+        let(:name) { 'Originate' }
+        let(:headers) { {:async => true} }
+
+        it "should be 60 seconds" do
+          subject.sync_timeout.should be == 10
+        end
+      end
+
+      context "for a synchronous Originate" do
+        let(:name) { 'Originate' }
+        let(:headers) { {:async => false} }
+
+        it "should be 60 seconds" do
+          subject.sync_timeout.should be == 60
+        end
+      end
+    end
   end # Action
 end # RubyAMI

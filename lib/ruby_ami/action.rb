@@ -120,6 +120,10 @@ module RubyAMI
     end
     alias :== :eql?
 
+    def sync_timeout
+      name.downcase == 'originate' && !headers['async'] ? 60 : 10
+    end
+
     ##
     # This class will be removed once this AMI library fully supports all known protocol anomalies.
     #
