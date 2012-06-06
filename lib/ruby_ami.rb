@@ -5,6 +5,7 @@
   logger
   girl_friday
   countdownlatch
+  celluloid/io
 }.each { |f| require f }
 
 class Logger

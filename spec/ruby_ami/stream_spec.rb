@@ -2,21 +2,20 @@ require 'spec_helper'
 
 module RubyAMI
   describe Stream do
+    let(:server_port) { 50000 - rand(1000) }
+
     def mocked_server(times = nil, fake_client = nil, &block)
       MockServer.any_instance.expects(:receive_data).send(*(times ? [:times, times] : [:at_least, 1])).with &block
+      s = ServerMock.new '127.0.0.1', server_port
       EventMachine::run {
         EM.add_timer(0.5) { EM.stop if EM.reactor_running? }
 
-        port = 50000 - rand(1000)
-
-        # Mocked server
-        EventMachine::start_server '127.0.0.1', port, ServerMock
-
         # Stream connection
-        EM.connect('127.0.0.1', port, Stream, lambda { |m| client.message_received m }) {|c| @stream = c}
+        EM.connect('127.0.0.1', server_port, Stream, lambda { |m| client.message_received m }) {|c| @stream = c}
 
         fake_client.call if fake_client.respond_to? :call
       }
+      s.terminate
     end
 
     def expect_connected_event
