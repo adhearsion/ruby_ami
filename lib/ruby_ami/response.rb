@@ -46,7 +46,12 @@ module RubyAMI
     end
 
     def inspect_attributes
-      [:headers, :action]
+      [:headers, :text_body, :events, :action]
     end
+
+    def eql?(o, *fields)
+      o.is_a?(self.class) && (fields + inspect_attributes).all? { |f| self.__send__(f) == o.__send__(f) }
+    end
+    alias :== :eql?
   end
 end # RubyAMI

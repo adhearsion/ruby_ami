@@ -1,6 +1,5 @@
 %w{
   uuidtools
-  eventmachine
   future-resource
   logger
   girl_friday
