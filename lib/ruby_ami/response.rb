@@ -18,7 +18,7 @@ module RubyAMI
     attr_reader   :events
 
     def initialize
-      @headers = HashWithIndifferentAccess.new
+      @headers = Hash.new
     end
 
     def has_text_body?
@@ -30,11 +30,11 @@ module RubyAMI
     end
 
     def [](arg)
-      @headers[arg]
+      @headers[arg.to_s]
     end
 
     def []=(key,value)
-      @headers[key] = value
+      @headers[key.to_s] = value
     end
 
     def action_id

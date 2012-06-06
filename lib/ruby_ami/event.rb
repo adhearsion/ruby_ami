@@ -1,3 +1,5 @@
+require 'ruby_ami/response'
+
 module RubyAMI
   class Event < Response
     attr_reader :name
