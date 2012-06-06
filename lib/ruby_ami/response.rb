@@ -40,5 +40,13 @@ module RubyAMI
     def action_id
       @headers['ActionID']
     end
+
+    def inspect
+      "#<#{self.class} #{inspect_attributes.map { |c| "#{c}=#{self.__send__(c).inspect rescue nil}" }.compact * ', '}>"
+    end
+
+    def inspect_attributes
+      [:headers, :action]
+    end
   end
 end # RubyAMI
