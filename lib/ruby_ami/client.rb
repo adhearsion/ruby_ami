@@ -41,16 +41,20 @@ module RubyAMI
     end
 
     def start
-      EventMachine.run do
-        yield if block_given?
-        @events_stream  = start_stream lambda { |event| @event_processor << event }
-        @actions_stream = start_stream lambda { |message| @message_processor << message }
-        @state = :started
-      end
+      @events_stream  = start_stream lambda { |event| @event_processor << event }
+      @actions_stream = start_stream lambda { |message| @message_processor << message }
+      @state = :started
+      streams.each(&:join)
     end
 
     def stop
-      streams.each { |s| s.close_connection_after_writing }
+      streams.each do |stream|
+        begin
+          stream.terminate
+        rescue => e
+          logger.error e if logger
+        end
+      end
     end
 
     def send_action(action, headers = {}, &block)
@@ -68,7 +72,7 @@ module RubyAMI
         login_actions
       when Stream::Disconnected
         stop_writing_actions
-        unbind
+        stop
       when Event
         action = @current_action_with_causal_events
         if action
@@ -103,7 +107,7 @@ module RubyAMI
       when Stream::Connected
         login_events
       when Stream::Disconnected
-        unbind
+        stop
       else
         pass_event event
       end
@@ -115,10 +119,6 @@ module RubyAMI
       actions_stream.send_action action
       action.state = :sent
       action
-    end
-
-    def unbind
-      EM.reactor_running? && EM.stop
     end
 
     private
@@ -179,7 +179,7 @@ module RubyAMI
     end
 
     def start_stream(callback)
-      Stream.start @options[:host], @options[:port], callback
+      Stream.new @options[:host], @options[:port], callback
     end
 
     def logger

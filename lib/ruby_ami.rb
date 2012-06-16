@@ -1,18 +1,10 @@
 %w{
-  active_support/dependencies/autoload
-  active_support/core_ext/object/blank
-  active_support/core_ext/numeric/time
-  active_support/core_ext/numeric/bytes
-  active_support/hash_with_indifferent_access
-
   uuidtools
-  eventmachine
   future-resource
   logger
   girl_friday
   countdownlatch
-
-  ruby_ami/metaprogramming
+  celluloid/io
 }.each { |f| require f }
 
 class Logger
@@ -20,14 +12,16 @@ class Logger
 end
 
 module RubyAMI
-  extend ActiveSupport::Autoload
-
-  autoload :Action
-  autoload :Client
-  autoload :Error
-  autoload :Event
-  autoload :Lexer
-  autoload :Response
-  autoload :Stream
-  autoload :Version
 end
+
+%w{
+  action
+  client
+  error
+  event
+  lexer
+  metaprogramming
+  response
+  stream
+  version
+}.each { |f| require "ruby_ami/#{f}" }

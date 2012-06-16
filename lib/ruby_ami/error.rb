@@ -3,7 +3,7 @@ module RubyAMI
     attr_accessor :message, :action
 
     def initialize
-      @headers = HashWithIndifferentAccess.new
+      @headers = Hash.new
     end
 
     def [](key)
