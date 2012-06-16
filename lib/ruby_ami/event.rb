@@ -1,3 +1,5 @@
+require 'ruby_ami/response'
+
 module RubyAMI
   class Event < Response
     attr_reader :name
@@ -5,6 +7,10 @@ module RubyAMI
     def initialize(name)
       super()
       @name = name
+    end
+
+    def inspect_attributes
+      [:name] + super
     end
   end
 end # RubyAMI

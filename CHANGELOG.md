@@ -1,4 +1,5 @@
 # develop
+  * Change: Switch from EventMachine to Celluloid & CelluloidIO for better JRuby compatability and performance (action and events connections are now in separate threads)
 
 # 1.0.1 - 2012-04-25
   * Bugfix: Actions which do not receive a response within 10s will allow further actions to be executed. Synchronous originate has a 60s timeout.

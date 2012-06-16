@@ -18,7 +18,7 @@ module RubyAMI
     attr_reader   :events
 
     def initialize
-      @headers = HashWithIndifferentAccess.new
+      @headers = Hash.new
     end
 
     def has_text_body?
@@ -30,15 +30,28 @@ module RubyAMI
     end
 
     def [](arg)
-      @headers[arg]
+      @headers[arg.to_s]
     end
 
     def []=(key,value)
-      @headers[key] = value
+      @headers[key.to_s] = value
     end
 
     def action_id
       @headers['ActionID']
     end
+
+    def inspect
+      "#<#{self.class} #{inspect_attributes.map { |c| "#{c}=#{self.__send__(c).inspect rescue nil}" }.compact * ', '}>"
+    end
+
+    def inspect_attributes
+      [:headers, :text_body, :events, :action]
+    end
+
+    def eql?(o, *fields)
+      o.is_a?(self.class) && (fields + inspect_attributes).all? { |f| self.__send__(f) == o.__send__(f) }
+    end
+    alias :== :eql?
   end
 end # RubyAMI

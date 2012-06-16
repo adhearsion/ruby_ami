@@ -1,7 +1,8 @@
 module RubyAMI
   class Lexer
 
-    BUFFER_SIZE = 128.kilobytes unless defined? BUFFER_SIZE
+    KILOBYTE = 1024
+    BUFFER_SIZE = 128 * KILOBYTE unless defined? BUFFER_SIZE
 
     ##
     # IMPORTANT! See method documentation for adjust_pointers!

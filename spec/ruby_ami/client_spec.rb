@@ -26,11 +26,11 @@ module RubyAMI
 
     describe 'starting up' do
       before do
-        MockServer.any_instance.stubs :receive_data
-        subject.start do
-          EM.start_server options[:host], options[:port], ServerMock
-          EM.add_timer(0.5) { EM.stop if EM.reactor_running? }
-        end
+        ms = MockServer.new
+        ms.expects(:receive_data).at_least_once
+        s = ServerMock.new options[:host], options[:port], ms
+        Thread.new { subject.start }
+        sleep 0.2
       end
 
       it { should be_started }
@@ -89,8 +89,8 @@ module RubyAMI
     end
 
     describe 'when the events stream disconnects' do
-      it 'should unbind' do
-        subject.expects(:unbind).once
+      it 'should stop' do
+        subject.expects(:stop).once
         subject.handle_event Stream::Disconnected.new
         event_handler.should be_empty
       end
@@ -117,8 +117,8 @@ module RubyAMI
         action.should be_new
       end
 
-      it 'should unbind' do
-        subject.expects(:unbind).once
+      it 'should stop' do
+        subject.expects(:stop).once
         subject.handle_message Stream::Disconnected.new
       end
     end
@@ -340,26 +340,8 @@ module RubyAMI
       end
 
       it 'should close both streams' do
-        streams.each { |s| s.expects :close_connection_after_writing }
+        streams.each { |s| s.expects :terminate }
         subject.stop
-      end
-    end
-
-    describe '#unbind' do
-      context 'if EM is running' do
-        it 'shuts down EM' do
-          EM.expects(:reactor_running?).returns true
-          EM.expects(:stop)
-          subject.unbind
-        end
-      end
-
-      context 'if EM is not running' do
-        it 'does nothing' do
-          EM.expects(:reactor_running?).returns false
-          EM.expects(:stop).never
-          subject.unbind
-        end
       end
     end
   end

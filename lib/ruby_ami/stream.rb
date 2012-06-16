@@ -1,5 +1,5 @@
 module RubyAMI
-  class Stream < EventMachine::Connection
+  class Stream
     class ConnectionStatus
       def eql?(other)
         other.is_a? self.class
@@ -11,21 +11,27 @@ module RubyAMI
     Connected = Class.new ConnectionStatus
     Disconnected = Class.new ConnectionStatus
 
-    def self.start(host, port, event_callback)
-      EM.connect host, port, self, event_callback
-    end
+    include Celluloid::IO
 
-    def initialize(event_callback)
+    def initialize(host, port, event_callback)
       super()
       @event_callback = event_callback
-      @logger = Logger.new($stdout)
-      @logger.level = Logger::FATAL
-      @logger.debug "Starting up..."
+      logger.debug "Starting up..."
       @lexer = Lexer.new self
+      @socket = TCPSocket.from_ruby_socket ::TCPSocket.new(host, port)
+      post_init
+      run!
     end
 
     [:started, :stopped, :ready].each do |state|
       define_method("#{state}?") { @state == state }
+    end
+
+    def run
+      loop { receive_data @socket.readpartial(4096) }
+    rescue EOFError
+      logger.info "Client socket closed!"
+      current_actor.terminate!
     end
 
     def post_init
@@ -33,28 +39,36 @@ module RubyAMI
       @event_callback.call Connected.new
     end
 
+    def send_data(data)
+      @socket.write data
+    end
+
     def send_action(action)
-      @logger.debug "[SEND] #{action.to_s}"
+      logger.debug "[SEND] #{action.to_s}"
       send_data action.to_s
     end
 
     def receive_data(data)
-      @logger.debug "[RECV] #{data}"
+      logger.debug "[RECV] #{data}"
       @lexer << data
     end
 
     def message_received(message)
-      @logger.debug "[RECV] #{message.inspect}"
+      logger.debug "[RECV] #{message.inspect}"
       @event_callback.call message
     end
 
     alias :error_received :message_received
 
-    # Called by EM when the connection is closed
-    # @private
-    def unbind
+    def finalize
+      logger.debug "Finalizing stream"
+      @socket.close if @socket
       @state = :stopped
       @event_callback.call Disconnected.new
+    end
+
+    def logger
+      Logger
     end
   end
 end

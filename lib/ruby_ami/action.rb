@@ -9,7 +9,7 @@ module RubyAMI
 
     def initialize(name, headers = {}, &block)
       @name       = name.to_s.downcase.freeze
-      @headers    = headers.stringify_keys.freeze
+      @headers    = headers.freeze
       @action_id  = UUIDTools::UUID.random_create.to_s
       @response   = FutureResource.new
       @response_callback = block
@@ -121,7 +121,7 @@ module RubyAMI
     alias :== :eql?
 
     def sync_timeout
-      name.downcase == 'originate' && !headers['async'] ? 60 : 10
+      name.downcase == 'originate' && !headers[:async] ? 60 : 10
     end
 
     ##
