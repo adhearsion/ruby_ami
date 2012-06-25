@@ -1,5 +1,8 @@
 # [develop](https://github.com/adhearsion/ruby_ami)
 
+# [1.1.1](https://github.com/adhearsion/ruby_ami/compare/v1.1.0...v1.1.1) - [2012-06-25](https://rubygems.org/gems/ruby_ami/versions/1.1.1)
+  * v1.1.0 re-released with fixed celluloid-io dependency
+
 # [1.1.0](https://github.com/adhearsion/ruby_ami/compare/v1.0.1...v1.1.0) - [2012-06-16](https://rubygems.org/gems/ruby_ami/versions/1.1.0)
   * Change: Switch from EventMachine to Celluloid & CelluloidIO for better JRuby compatability and performance (action and events connections are now in separate threads)
 
