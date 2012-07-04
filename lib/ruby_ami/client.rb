@@ -50,7 +50,7 @@ module RubyAMI
     def stop
       streams.each do |stream|
         begin
-          stream.terminate
+          stream.terminate if stream.alive?
         rescue => e
           logger.error e if logger
         end

@@ -1,5 +1,8 @@
 # [develop](https://github.com/adhearsion/ruby_ami)
 
+# [1.1.2](https://github.com/adhearsion/ruby_ami/compare/v1.1.1...v1.1.2) - [2012-07-04](https://rubygems.org/gems/ruby_ami/versions/1.1.2)
+  * Bugfix: Avoid recursive stream stopping
+
 # [1.1.1](https://github.com/adhearsion/ruby_ami/compare/v1.1.0...v1.1.1) - [2012-06-25](https://rubygems.org/gems/ruby_ami/versions/1.1.1)
   * v1.1.0 re-released with fixed celluloid-io dependency
 
