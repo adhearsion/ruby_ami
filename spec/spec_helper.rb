@@ -12,7 +12,6 @@ SimpleCov.start do
 end
 
 require 'ruby_ami'
-require 'mocha'
 require 'countdownlatch'
 
 Dir[File.dirname(__FILE__) + "/support/**/*.rb"].each {|f| require f}
