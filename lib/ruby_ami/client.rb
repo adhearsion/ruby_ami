@@ -41,8 +41,9 @@ module RubyAMI
     end
 
     def start
-      @events_stream  = start_stream lambda { |event| @event_processor << event }
-      @actions_stream = start_stream lambda { |message| @message_processor << message }
+      @events_stream  = new_stream lambda { |event| @event_processor << event }
+      @actions_stream = new_stream lambda { |message| @message_processor << message }
+      streams.each(&:run!)
       @state = :started
       streams.each(&:join)
     end
@@ -178,7 +179,7 @@ module RubyAMI
                  &block
     end
 
-    def start_stream(callback)
+    def new_stream(callback)
       Stream.new @options[:host], @options[:port], callback
     end
 
