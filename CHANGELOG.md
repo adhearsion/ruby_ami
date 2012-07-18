@@ -1,4 +1,5 @@
 # [develop](https://github.com/adhearsion/ruby_ami)
+  * Feature: Added parsers for (Async)AGI environment and result strings
   * Bugfix: Avoid a race condition in stream establishment and event receipt
   * Bugfix: If socket creation fails, log an appropriate error
 
