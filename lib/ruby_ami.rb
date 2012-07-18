@@ -11,7 +11,7 @@ class Logger
 end
 
 module RubyAMI
-  def new_uuid
+  def self.new_uuid
     SecureRandom.uuid
   end
 end
