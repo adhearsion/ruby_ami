@@ -329,8 +329,8 @@ module RubyAMI
     end
 
     describe '#stop' do
-      let(:mock_actions_stream) { mock 'Actions Stream' }
-      let(:mock_events_stream) { mock 'Events Stream' }
+      let(:mock_actions_stream) { mock 'Actions Stream', :alive? => true }
+      let(:mock_events_stream) { mock 'Events Stream', :alive? => true }
 
       let(:streams) { [mock_actions_stream, mock_events_stream] }
 

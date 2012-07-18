@@ -16,6 +16,8 @@ end
 
 %w{
   action
+  agi_result_parser
+  async_agi_environment_parser
   client
   error
   event

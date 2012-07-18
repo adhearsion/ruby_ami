@@ -1,5 +1,10 @@
 # [develop](https://github.com/adhearsion/ruby_ami)
 
+# [1.2.0](https://github.com/adhearsion/ruby_ami/compare/v1.1.2...v1.2.0) - [2012-07-18](https://rubygems.org/gems/ruby_ami/versions/1.2.0)
+  * Feature: Added parsers for (Async)AGI environment and result strings
+  * Bugfix: Avoid a race condition in stream establishment and event receipt
+  * Bugfix: If socket creation fails, log an appropriate error
+
 # [1.1.2](https://github.com/adhearsion/ruby_ami/compare/v1.1.1...v1.1.2) - [2012-07-04](https://rubygems.org/gems/ruby_ami/versions/1.1.2)
   * Bugfix: Avoid recursive stream stopping
 

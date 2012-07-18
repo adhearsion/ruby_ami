@@ -15,12 +15,9 @@ module RubyAMI
 
     def initialize(host, port, event_callback)
       super()
-      @event_callback = event_callback
+      @host, @port, @event_callback = host, port, event_callback
       logger.debug "Starting up..."
       @lexer = Lexer.new self
-      @socket = TCPSocket.from_ruby_socket ::TCPSocket.new(host, port)
-      post_init
-      run!
     end
 
     [:started, :stopped, :ready].each do |state|
@@ -28,7 +25,12 @@ module RubyAMI
     end
 
     def run
+      @socket = TCPSocket.from_ruby_socket ::TCPSocket.new(@host, @port)
+      post_init
       loop { receive_data @socket.readpartial(4096) }
+    rescue Errno::ECONNREFUSED, SocketError => e
+      logger.error "Connection failed due to #{e.class}. Check your config and the server."
+      current_actor.terminate!
     rescue EOFError
       logger.info "Client socket closed!"
       current_actor.terminate!
