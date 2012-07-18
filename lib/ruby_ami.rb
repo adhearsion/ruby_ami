@@ -1,5 +1,4 @@
 %w{
-  uuidtools
   future-resource
   logger
   girl_friday
@@ -12,6 +11,9 @@ class Logger
 end
 
 module RubyAMI
+  def new_uuid
+    SecureRandom.uuid
+  end
 end
 
 %w{
