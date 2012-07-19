@@ -30,7 +30,7 @@ RSpec.configure do |config|
   config.run_all_when_everything_filtered = true
 
   config.before :each do
-    uuid = UUIDTools::UUID.random_create
-    UUIDTools::UUID.stubs :random_create => uuid
+    uuid = RubyAMI.new_uuid
+    RubyAMI.stubs :new_uuid => uuid
   end
 end
