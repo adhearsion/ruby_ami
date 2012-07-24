@@ -4,8 +4,8 @@ module RubyAMI
   class AGIResultParser
     attr_reader :code, :result, :data
 
-    FORMAT          = /^(\d{3}) result=(-?\d*) ?(\(?.*\)?)?$/.freeze
-    DATA_KV_FORMAT  = /([\w\d]+)=([\w\d]*)/.freeze
+    FORMAT          = /^(?<code>\d{3}) result=(?<result>-?\d*) ?(?<data>\(?.*\)?)?$/.freeze
+    DATA_KV_FORMAT  = /(?<key>[\w\d]+)=(?<value>[\w\d]*)/.freeze
     DATA_CLEANER    = /(^\()|(\)$)/.freeze
 
     def initialize(result_string)
@@ -16,7 +16,7 @@ module RubyAMI
 
     def data_hash
       return unless data_kv_match
-      {data_kv_match[1] => data_kv_match[2]}
+      {data_kv_match[:key] => data_kv_match[:value]}
     end
 
     private
@@ -30,9 +30,9 @@ module RubyAMI
     end
 
     def parse
-      @code = match[1].to_i
-      @result = match[2].to_i
-      @data = match[3] ? match[3].gsub(DATA_CLEANER, '').freeze : nil
+      @code = match[:code].to_i
+      @result = match[:result].to_i
+      @data = match[:data] ? match[:data].gsub(DATA_CLEANER, '').freeze : nil
     end
 
     def data_kv_match
