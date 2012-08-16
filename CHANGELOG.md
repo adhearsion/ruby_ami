@@ -1,4 +1,5 @@
 # [develop](https://github.com/adhearsion/ruby_ami)
+  * Streams now log syntax errors
 
 # [1.2.1](https://github.com/adhearsion/ruby_ami/compare/v1.2.0...v1.2.1) - [2012-07-19](https://rubygems.org/gems/ruby_ami/versions/1.2.1)
   * Use SecureRandom for UUIDs
