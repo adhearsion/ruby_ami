@@ -1,5 +1,5 @@
 guard 'shell', :all_on_start => true do
-  watch("lib/ruby_ami/lexer.rl.rb") { `rake ragel` }
+  watch("lib/ruby_ami/lexer_machine.rl") { `rake ragel` }
 end
 
 guard 'rspec', :version => 2, :cli => '--format documentation' do
