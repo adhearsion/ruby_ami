@@ -27,6 +27,23 @@ end
 client.start
 ```
 
+## Development Requirements
+
+ruby_ami uses [ragel](http://www.complang.org/ragel/) to generate some of it's
+files.
+
+On OS X (if you use homebrew):
+
+    brew install ragel
+
+On Linux:
+
+    apt-get install ragel OR yum install ragel
+
+Once you are inside the repository, before anything else, you will want to run:
+
+    rake ragel
+
 ## Links:
 * [Source](https://github.com/adhearsion/ruby_ami)
 * [Documentation](http://rdoc.info/github/adhearsion/ruby_ami/master/frames)
