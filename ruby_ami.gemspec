@@ -33,5 +33,6 @@ Gem::Specification.new do |s|
   s.add_development_dependency %q<simplecov>, [">= 0"]
   s.add_development_dependency %q<simplecov-rcov>, [">= 0"]
   s.add_development_dependency %q<guard-rspec>
+  s.add_development_dependency %q<guard-shell>
   s.add_development_dependency %q<ruby_gntp>
 end
