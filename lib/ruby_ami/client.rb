@@ -45,7 +45,7 @@ module RubyAMI
       @actions_stream = new_stream lambda { |message| @message_processor << message }
       streams.each(&:run!)
       @state = :started
-      streams.each(&:join)
+      streams.each { |s| Celluloid::Actor.join s }
     end
 
     def stop

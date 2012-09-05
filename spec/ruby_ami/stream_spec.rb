@@ -28,8 +28,8 @@ module RubyAMI
       @stream = Stream.new '127.0.0.1', server_port, lambda { |m| client.message_received m }
       @stream.run!
       fake_client.call if fake_client.respond_to? :call
-      s.join
-      @stream.join
+      Celluloid::Actor.join s
+      Celluloid::Actor.join @stream
     end
 
     def expect_connected_event
