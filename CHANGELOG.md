@@ -1,5 +1,9 @@
 # [develop](https://github.com/adhearsion/ruby_ami)
 
+# [1.2.2](https://github.com/adhearsion/ruby_ami/compare/v1.2.1...v1.2.2) - [2012-09-05](https://rubygems.org/gems/ruby_ami/versions/1.2.2)
+  * Streams now log syntax errors
+  * Celluloid dependency updated
+
 # [1.2.1](https://github.com/adhearsion/ruby_ami/compare/v1.2.0...v1.2.1) - [2012-07-19](https://rubygems.org/gems/ruby_ami/versions/1.2.1)
   * Use SecureRandom for UUIDs
 

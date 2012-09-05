@@ -60,6 +60,10 @@ module RubyAMI
       @event_callback.call message
     end
 
+    def syntax_error_encountered(ignored_chunk)
+      logger.error "Encountered a syntax error. Ignoring chunk: #{ignored_chunk.inspect}"
+    end
+
     alias :error_received :message_received
 
     def finalize
