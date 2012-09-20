@@ -4,7 +4,7 @@ module RubyAMI
 
     def initialize(options)
       @options          = options
-      @logger           = options[:logger]
+      @logger           = options[:logger] || Logger.new(STDOUT)
       @logger.level     = options[:log_level] || Logger::DEBUG if @logger
       @event_handler    = @options[:event_handler]
       @state            = :stopped
