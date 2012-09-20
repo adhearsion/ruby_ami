@@ -13,9 +13,11 @@ module RubyAMI
 
     include Celluloid::IO
 
-    def initialize(host, port, event_callback)
+    attr_reader :logger
+
+    def initialize(host, port, event_callback, logger = Logger)
       super()
-      @host, @port, @event_callback = host, port, event_callback
+      @host, @port, @event_callback, @logger = host, port, event_callback, logger
       logger.debug "Starting up..."
       @lexer = Lexer.new self
     end
@@ -71,10 +73,6 @@ module RubyAMI
       @socket.close if @socket
       @state = :stopped
       @event_callback.call Disconnected.new
-    end
-
-    def logger
-      Logger
     end
   end
 end

@@ -1,4 +1,5 @@
 # [develop](https://github.com/adhearsion/ruby_ami)
+  * Streams now inherit the client's logger
 
 # [1.2.2](https://github.com/adhearsion/ruby_ami/compare/v1.2.1...v1.2.2) - [2012-09-05](https://rubygems.org/gems/ruby_ami/versions/1.2.2)
   * Streams now log syntax errors
