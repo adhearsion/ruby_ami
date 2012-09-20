@@ -1,4 +1,6 @@
 # [develop](https://github.com/adhearsion/ruby_ami)
+
+# [1.2.3](https://github.com/adhearsion/ruby_ami/compare/v1.2.2...v1.2.3) - [2012-09-20](https://rubygems.org/gems/ruby_ami/versions/1.2.3)
   * Streams now inherit the client's logger
 
 # [1.2.2](https://github.com/adhearsion/ruby_ami/compare/v1.2.1...v1.2.2) - [2012-09-05](https://rubygems.org/gems/ruby_ami/versions/1.2.2)
