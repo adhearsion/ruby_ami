@@ -17,7 +17,8 @@ client = Client.new :username       => 'test',
                     :host           => '127.0.0.1',
                     :port           => 5038,
                     :event_handler  => lambda { |e| handle_event e },
-                    :logger         => Logger.new('ruby_ami.log')
+                    :logger         => Logger.new(STDOUT),
+                    :log_level      => Logger::DEBUG
 
 def handle_event(event)
   case event.name
