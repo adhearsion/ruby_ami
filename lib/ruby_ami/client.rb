@@ -180,7 +180,7 @@ module RubyAMI
     end
 
     def new_stream(callback)
-      Stream.new @options[:host], @options[:port], callback
+      Stream.new @options[:host], @options[:port], callback, logger
     end
 
     def logger
