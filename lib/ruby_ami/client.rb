@@ -1,3 +1,4 @@
+# encoding: utf-8
 module RubyAMI
   class Client
     attr_reader :options, :action_queue, :events_stream, :actions_stream
