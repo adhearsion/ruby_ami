@@ -72,7 +72,7 @@ module RubyAMI
 
     def initialize(delegate = nil)
       @delegate = delegate
-      @data = ""
+      @data = ''.encode('ISO-8859-1', 'ISO-8859-1')
       @current_pointer = 0
       @ragel_stack = []
       @ami_version = 0.0
@@ -125,7 +125,7 @@ module RubyAMI
         @data.slice! 0...length
         adjust_pointers -length
       end
-      @data << new_data
+      @data << new_data.encode('ISO-8859-1', 'ISO-8859-1')
       @data_ending_pointer = @data.size
     end
 
