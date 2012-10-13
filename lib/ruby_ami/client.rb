@@ -1,10 +1,11 @@
+# encoding: utf-8
 module RubyAMI
   class Client
     attr_reader :options, :action_queue, :events_stream, :actions_stream
 
     def initialize(options)
       @options          = options
-      @logger           = options[:logger]
+      @logger           = options[:logger] || Logger.new(STDOUT)
       @logger.level     = options[:log_level] || Logger::DEBUG if @logger
       @event_handler    = @options[:event_handler]
       @state            = :stopped

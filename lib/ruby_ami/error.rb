@@ -1,3 +1,4 @@
+# encoding: utf-8
 module RubyAMI
   class Error < StandardError
     attr_accessor :message, :action

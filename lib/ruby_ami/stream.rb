@@ -1,3 +1,4 @@
+# encoding: utf-8
 module RubyAMI
   class Stream
     class ConnectionStatus

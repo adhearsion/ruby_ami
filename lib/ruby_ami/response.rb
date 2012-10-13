@@ -1,3 +1,4 @@
+# encoding: utf-8
 module RubyAMI
   ##
   # This is the object containing a response from Asterisk.
