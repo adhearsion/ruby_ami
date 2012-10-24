@@ -1,5 +1,8 @@
 # [develop](https://github.com/adhearsion/ruby_ami)
 
+# [1.2.5](https://github.com/adhearsion/ruby_ami/compare/v1.2.4...v1.2.5) - [2012-10-24](https://rubygems.org/gems/ruby_ami/versions/1.2.5)
+  * Bugfix: Log wire stuff at trace level
+
 # [1.2.4](https://github.com/adhearsion/ruby_ami/compare/v1.2.3...v1.2.4) - [2012-10-13](https://rubygems.org/gems/ruby_ami/versions/1.2.4)
   * Bugfix: No longer suffer "invalid byte sequence" exceptions due to encoding mismatch. Thanks tboyko
 
