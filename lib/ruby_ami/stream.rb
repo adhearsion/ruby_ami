@@ -49,17 +49,17 @@ module RubyAMI
     end
 
     def send_action(action)
-      logger.debug "[SEND] #{action.to_s}"
+      logger.trace "[SEND] #{action.to_s}"
       send_data action.to_s
     end
 
     def receive_data(data)
-      logger.debug "[RECV] #{data}"
+      logger.trace "[RECV] #{data}"
       @lexer << data
     end
 
     def message_received(message)
-      logger.debug "[RECV] #{message.inspect}"
+      logger.trace "[RECV] #{message.inspect}"
       @event_callback.call message
     end
 

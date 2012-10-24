@@ -17,6 +17,7 @@ module RubyAMI
 end
 
 %w{
+  core_ext/celluloid
   action
   agi_result_parser
   async_agi_environment_parser
