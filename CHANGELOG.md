@@ -1,4 +1,6 @@
 # [develop](https://github.com/adhearsion/ruby_ami)
+
+# [1.2.6](https://github.com/adhearsion/ruby_ami/compare/v1.2.5...v1.2.6) - [2012-12-26](https://rubygems.org/gems/ruby_ami/versions/1.2.6)
   * Bugfix: JRuby and rbx compatability
 
 # [1.2.5](https://github.com/adhearsion/ruby_ami/compare/v1.2.4...v1.2.5) - [2012-10-24](https://rubygems.org/gems/ruby_ami/versions/1.2.5)
