@@ -1,4 +1,5 @@
 # [develop](https://github.com/adhearsion/ruby_ami)
+  * Bugfix: JRuby and rbx compatability
 
 # [1.2.5](https://github.com/adhearsion/ruby_ami/compare/v1.2.4...v1.2.5) - [2012-10-24](https://rubygems.org/gems/ruby_ami/versions/1.2.5)
   * Bugfix: Log wire stuff at trace level
