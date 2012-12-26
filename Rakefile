@@ -2,7 +2,6 @@ require 'bundler/gem_tasks'
 
 require 'rspec/core'
 require 'rspec/core/rake_task'
-require 'ci/reporter/rake/rspec'
 RSpec::Core::RakeTask.new(:spec) do |spec|
   spec.pattern = 'spec/**/*_spec.rb'
   spec.rspec_opts = '--color'
@@ -10,7 +9,6 @@ end
 
 require 'cucumber'
 require 'cucumber/rake/task'
-require 'ci/reporter/rake/cucumber'
 Cucumber::Rake::Task.new(:features) do |t|
   t.cucumber_opts = %w{--tags ~@jruby} unless defined?(JRUBY_VERSION)
 end
@@ -20,7 +18,6 @@ Cucumber::Rake::Task.new(:wip) do |t|
 end
 
 task :default => [:ragel, :spec, :features]
-task :ci => [:ragel, 'ci:setup:rspec', :spec, 'ci:setup:cucumber', :features]
 
 require 'yard'
 YARD::Rake::YardocTask.new
