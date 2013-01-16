@@ -16,9 +16,9 @@ module RubyAMI
 
     attr_reader :logger
 
-    def initialize(host, port, event_callback, logger = Logger)
+    def initialize(host, port, event_callback, logger = Logger, timeout = 0)
       super()
-      @host, @port, @event_callback, @logger = host, port, event_callback, logger
+      @host, @port, @event_callback, @logger, @timeout = host, port, event_callback, logger, timeout
       logger.debug "Starting up..."
       @lexer = Lexer.new self
     end
@@ -28,7 +28,9 @@ module RubyAMI
     end
 
     def run
-      @socket = TCPSocket.from_ruby_socket ::TCPSocket.new(@host, @port)
+      Timeout::timeout(@timeout) do 
+        @socket = TCPSocket.from_ruby_socket ::TCPSocket.new(@host, @port)
+      end
       post_init
       loop { receive_data @socket.readpartial(4096) }
     rescue Errno::ECONNREFUSED, SocketError => e
@@ -36,6 +38,9 @@ module RubyAMI
       current_actor.terminate!
     rescue EOFError
       logger.info "Client socket closed!"
+      current_actor.terminate!
+    rescue Timeout::Error
+      logger.error "Timeout exceeded while trying to connect."
       current_actor.terminate!
     end
 
