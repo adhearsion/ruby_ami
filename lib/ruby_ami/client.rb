@@ -181,7 +181,7 @@ module RubyAMI
     end
 
     def new_stream(callback)
-      Stream.new @options[:host], @options[:port], callback, logger
+      Stream.new @options[:host], @options[:port], callback, logger, @options[:timeout]
     end
 
     def logger
