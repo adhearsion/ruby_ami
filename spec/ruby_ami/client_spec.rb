@@ -30,7 +30,7 @@ module RubyAMI
       options[:host] = '192.0.2.1' # unreachable IP that will generally cause a timeout (RFC 5737)
       start_time = Time.now
       subject.start
-      (Time.now - start_time).between?(options[:timeout], options[:timeout] + 1).should be_true
+      (Time.now - start_time).should be_between(options[:timeout], options[:timeout] + 1)
     end
     
     describe 'starting up' do
