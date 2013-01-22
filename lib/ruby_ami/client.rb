@@ -10,7 +10,7 @@ module RubyAMI
       @event_handler    = @options[:event_handler]
       @state            = :stopped
 
-      if RbConfig::CONFIG['RUBY_INSTALL_NAME'] == 'rbx'
+      if RubyAMI.rbx?
         logger.warn 'The "timeout" parameter is not supported when using Rubinius'
       end
       

@@ -33,7 +33,7 @@ module RubyAMI
       subject.start
       duration = Time.now - start_time
       
-      if RbConfig::CONFIG['RUBY_INSTALL_NAME'] == 'rbx'
+      if RubyAMI.rbx?
          pending 'waiting for resolution to Rubinius bug (https://github.com/rubinius/rubinius/issues/2127)' do
            duration.should be_between(options[:timeout], options[:timeout] + 1)
         end
