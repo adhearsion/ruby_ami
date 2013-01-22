@@ -10,6 +10,10 @@ module RubyAMI
       @event_handler    = @options[:event_handler]
       @state            = :stopped
 
+      if RubyAMI.rbx?
+        logger.warn 'The "timeout" parameter is not supported when using Rubinius'
+      end
+      
       stop_writing_actions
 
       @pending_actions  = {}
