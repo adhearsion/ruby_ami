@@ -12,3 +12,4 @@ spec/reports
 features/reports
 vendor
 *.swp
+.rbx/*
