@@ -18,7 +18,8 @@ client = Client.new :username       => 'test',
                     :port           => 5038,
                     :event_handler  => lambda { |e| handle_event e },
                     :logger         => Logger.new(STDOUT),
-                    :log_level      => Logger::DEBUG
+                    :log_level      => Logger::DEBUG,
+                    :timeout        => 10 
 
 def handle_event(event)
   case event.name
