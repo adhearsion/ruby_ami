@@ -5,7 +5,7 @@ module RubyAMI
     attr_accessor :state
 
     CAUSAL_EVENT_NAMES = %w[queuestatus sippeers iaxpeers parkedcalls dahdishowchannels coreshowchannels
-                            dbget status agents konferencelist] unless defined? CAUSAL_EVENT_NAMES
+                            dbget status agents konferencelist confbridgelist confbridgelistrooms] unless defined? CAUSAL_EVENT_NAMES
 
     def initialize(name, headers = {}, &block)
       @name       = name.to_s.downcase.freeze
