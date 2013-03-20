@@ -28,20 +28,14 @@ module RubyAMI
     it 'should return when the timeout option is specified and reached' do
       options[:timeout] = 2
       options[:host] = '192.0.2.1' # unreachable IP that will generally cause a timeout (RFC 5737)
-      
+
       start_time = Time.now
       subject.start
       duration = Time.now - start_time
-      
-      if RubyAMI.rbx?
-         pending 'waiting for resolution to Rubinius bug (https://github.com/rubinius/rubinius/issues/2127)' do
-           duration.should be_between(options[:timeout], options[:timeout] + 1)
-        end
-      else
-        duration.should be_between(options[:timeout], options[:timeout] + 1)
-      end
+
+      duration.should be_between(options[:timeout], options[:timeout] + 1)
     end
-    
+
     describe 'starting up' do
       before do
         ms = MockServer.new
