@@ -5,8 +5,5 @@ rvm:
   - jruby-19mode
   - rbx-19mode
   - ruby-head
-before_install:
-  - wget http://ftp.us.debian.org/debian/pool/main/r/ragel/ragel_6.7-1.1_i386.deb
-  - sudo dpkg -i ragel_6.7-1.1_i386.deb
 notifications:
   irc: "irc.freenode.org#adhearsion"
