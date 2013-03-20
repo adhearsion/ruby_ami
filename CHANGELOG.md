@@ -1,4 +1,5 @@
 # [develop](https://github.com/adhearsion/ruby_ami)
+  * Bugfix: Add support for causal event types `confbridgelist` and `confbridgelistrooms`
 
 # [1.3.0](https://github.com/adhearsion/ruby_ami/compare/v1.2.6...v1.3.0) - [2013-01-23](https://rubygems.org/gems/ruby_ami/versions/1.3.0)
   * Feature: Added timeout feature to client connection process. Currently does not work on Rubinius due to https://github.com/rubinius/rubinius/issues/2127
