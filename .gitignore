@@ -13,3 +13,4 @@ features/reports
 vendor
 *.swp
 .rbx/*
+tmp
