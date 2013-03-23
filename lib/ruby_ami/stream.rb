@@ -16,6 +16,8 @@ module RubyAMI
 
     attr_reader :logger
 
+    finalizer :finalize
+
     def initialize(host, port, event_callback, logger = Logger, timeout = 0)
       super()
       @host, @port, @event_callback, @logger, @timeout = host, port, event_callback, logger, timeout
@@ -73,6 +75,8 @@ module RubyAMI
     end
 
     alias :error_received :message_received
+
+    private
 
     def finalize
       logger.debug "Finalizing stream"

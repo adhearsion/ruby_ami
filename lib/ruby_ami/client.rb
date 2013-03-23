@@ -48,7 +48,7 @@ module RubyAMI
     def start
       @events_stream  = new_stream lambda { |event| @event_processor << event }
       @actions_stream = new_stream lambda { |message| @message_processor << message }
-      streams.each(&:run!)
+      streams.each { |stream| stream.async.run }
       @state = :started
       streams.each { |s| Celluloid::Actor.join s }
     end
