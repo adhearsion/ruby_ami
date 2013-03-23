@@ -1,5 +1,8 @@
 # [develop](https://github.com/adhearsion/ruby_ami)
 
+# [1.3.2](https://github.com/adhearsion/ruby_ami/compare/v1.3.1...v1.3.2) - [2013-03-22](https://rubygems.org/gems/ruby_ami/versions/1.3.2)
+  * CS: Avoid celluloid deprecation warnings
+
 # [1.3.1](https://github.com/adhearsion/ruby_ami/compare/v1.3.0...v1.3.1) - [2013-03-20](https://rubygems.org/gems/ruby_ami/versions/1.3.1)
   * Bugfix: Add support for causal event types `confbridgelist` and `confbridgelistrooms`
   * Bugfix: Loosen celluloid dependency
