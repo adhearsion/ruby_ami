@@ -30,7 +30,7 @@ module RubyAMI
     end
 
     def run
-      Timeout::timeout(@timeout) do 
+      Timeout::timeout(@timeout) do
         @socket = TCPSocket.from_ruby_socket ::TCPSocket.new(@host, @port)
       end
       post_init
