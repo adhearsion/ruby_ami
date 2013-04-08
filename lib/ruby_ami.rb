@@ -25,7 +25,6 @@ end
   error
   event
   lexer
-  metaprogramming
   response
   stream
   version
