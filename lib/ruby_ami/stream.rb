@@ -37,13 +37,13 @@ module RubyAMI
       loop { receive_data @socket.readpartial(4096) }
     rescue Errno::ECONNREFUSED, SocketError => e
       logger.error "Connection failed due to #{e.class}. Check your config and the server."
-      current_actor.terminate!
+      terminate
     rescue EOFError
       logger.info "Client socket closed!"
-      current_actor.terminate!
+      terminate
     rescue Timeout::Error
       logger.error "Timeout exceeded while trying to connect."
-      current_actor.terminate!
+      terminate
     end
 
     def post_init
