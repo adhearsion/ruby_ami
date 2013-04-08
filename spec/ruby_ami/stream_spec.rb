@@ -5,6 +5,10 @@ module RubyAMI
   describe Stream do
     let(:server_port) { 50000 - rand(1000) }
 
+    def client
+      @client ||= mock('Client')
+    end
+
     before do
       def client.message_received(message)
         @messages ||= Queue.new
@@ -24,21 +28,23 @@ module RubyAMI
 
     def mocked_server(times = nil, fake_client = nil, &block)
       mock_target = MockServer.new
-      mock_target.expects(:receive_data).send(*(times ? [:times, times] : [:at_least, 1])).with &block
+      mock_target.should_receive(:receive_data).send(*(times ? [:exactly, times] : [:at_least, 1])).with &block
       s = ServerMock.new '127.0.0.1', server_port, mock_target
       @stream = Stream.new '127.0.0.1', server_port, lambda { |m| client.message_received m }
       @stream.async.run
       fake_client.call if fake_client.respond_to? :call
       Celluloid::Actor.join s
-      Celluloid::Actor.join @stream
+      Timeout.timeout 5 do
+        Celluloid::Actor.join @stream
+      end
     end
 
     def expect_connected_event
-      client.expects(:message_received).with Stream::Connected.new
+      client.should_receive(:message_received).with Stream::Connected.new
     end
 
     def expect_disconnected_event
-      client.expects(:message_received).with Stream::Disconnected.new
+      client.should_receive(:message_received).with Stream::Disconnected.new
     end
 
     before { @sequence = 1 }
@@ -105,7 +111,7 @@ Message: Authentication accepted
     end
 
     it 'sends error to the client when the stream is ready and a bad command was send' do
-      client.expects(:message_received).times(3).with do |r|
+      client.should_receive(:message_received).exactly(3).times.with do |r|
         case @sequence
         when 1
           r.should be_a Stream::Connected

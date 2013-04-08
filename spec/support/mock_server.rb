@@ -41,7 +41,3 @@ class ServerMock
     @clients.each { |client| client.write data.gsub("\n", "\r\n") }
   end
 end
-
-def client
-  @client ||= mock('Client')
-end

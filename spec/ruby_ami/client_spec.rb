@@ -39,7 +39,7 @@ module RubyAMI
     describe 'starting up' do
       before do
         ms = MockServer.new
-        ms.expects(:receive_data).at_least_once
+        ms.should_receive(:receive_data).at_least :once
         s = ServerMock.new options[:host], options[:port], ms
         Thread.new { subject.start }
         sleep 0.2
@@ -63,12 +63,12 @@ module RubyAMI
         end
 
         before do
-          Action.any_instance.stubs(:response).returns(true)
-          subject.stubs(:actions_stream).returns mock_actions_stream
+          Action.any_instance.stub(:response).and_return(true)
+          subject.stub(:actions_stream).and_return mock_actions_stream
         end
 
         it 'should log in' do
-          mock_actions_stream.expects(:send_action).with do |action|
+          mock_actions_stream.should_receive(:send_action).with do |action|
             action.to_s.should == expected_login_action.to_s
           end
 
@@ -87,11 +87,11 @@ module RubyAMI
         end
 
         before do
-          subject.stubs(:events_stream).returns mock_events_stream
+          subject.stub(:events_stream).and_return mock_events_stream
         end
 
         it 'should log in' do
-          mock_events_stream.expects(:send_action).with expected_login_action
+          mock_events_stream.should_receive(:send_action).with expected_login_action
 
           subject.handle_event Stream::Connected.new
 
@@ -102,7 +102,7 @@ module RubyAMI
 
     describe 'when the events stream disconnects' do
       it 'should stop' do
-        subject.expects(:stop).once
+        subject.should_receive(:stop).once
         subject.handle_event Stream::Disconnected.new
         event_handler.should be_empty
       end
@@ -110,11 +110,11 @@ module RubyAMI
 
     describe 'when the actions stream disconnects' do
       before do
-        Action.any_instance.stubs(:response).returns(true)
+        Action.any_instance.stub(:response).and_return(true)
       end
 
       it 'should prevent further actions being sent' do
-        subject.expects(:_send_action).once
+        subject.should_receive(:_send_action).once
 
         GirlFriday::WorkQueue.immediate!
         subject.handle_message Stream::Connected.new
@@ -130,7 +130,7 @@ module RubyAMI
       end
 
       it 'should stop' do
-        subject.expects(:stop).once
+        subject.should_receive(:stop).once
         subject.handle_message Stream::Disconnected.new
       end
     end
@@ -166,16 +166,16 @@ module RubyAMI
       end
 
       it 'should begin writing actions' do
-        subject.expects(:start_writing_actions).once
+        subject.should_receive(:start_writing_actions).once
         subject.handle_message event
       end
 
       it 'should turn off events' do
-        Action.any_instance.stubs(:response).returns true
-        subject.stubs(:actions_stream).returns mock_actions_stream
+        Action.any_instance.stub(:response).and_return true
+        subject.stub(:actions_stream).and_return mock_actions_stream
 
-        mock_actions_stream.expects(:send_action).once.with expected_login_action
-        mock_actions_stream.expects(:send_action).once.with expected_events_off_action
+        mock_actions_stream.should_receive(:send_action).once.with expected_login_action
+        mock_actions_stream.should_receive(:send_action).once.with expected_events_off_action
 
         login_action = subject.handle_message(Stream::Connected.new).join
         login_action.value.response = true
@@ -205,19 +205,19 @@ module RubyAMI
       let(:mock_actions_stream) { mock 'Actions Stream' }
 
       before do
-        subject.stubs(:actions_stream).returns mock_actions_stream
-        subject.stubs(:login_actions).returns nil
+        subject.stub(:actions_stream).and_return mock_actions_stream
+        subject.stub(:login_actions).and_return nil
       end
 
       it 'should queue up actions to be sent' do
         subject.handle_message Stream::Connected.new
-        subject.action_queue.expects(:<<).with expected_action
+        subject.action_queue.should_receive(:<<).with expected_action
         subject.send_action action_name, headers
       end
 
       describe 'forcibly for testing' do
         before do
-          subject.actions_stream.expects(:send_action).with expected_action
+          subject.actions_stream.should_receive(:send_action).with expected_action
           subject._send_action expected_action
         end
 
@@ -229,7 +229,7 @@ module RubyAMI
 
         describe 'when a response is received' do
           it 'should be sent to the action' do
-            expected_action.expects(:<<).once.with expected_response
+            expected_action.should_receive(:<<).once.with expected_response
             receive_response
           end
 
@@ -248,7 +248,7 @@ module RubyAMI
           end
 
           it 'should be sent to the action' do
-            expected_action.expects(:<<).once.with expected_response
+            expected_action.should_receive(:<<).once.with expected_response
             receive_response
           end
 
@@ -267,14 +267,14 @@ module RubyAMI
             let(:expected_action) { Action.new 'Status' }
 
             it 'should be sent to the action' do
-              expected_action.expects(:<<).once.with expected_response
-              expected_action.expects(:<<).once.with event
+              expected_action.should_receive(:<<).once.with expected_response
+              expected_action.should_receive(:<<).once.with event
               receive_response
               receive_event
             end
 
             it 'should know its action' do
-              expected_action.stubs :<<
+              expected_action.stub :<<
               receive_response
               receive_event
               event.action.should be expected_action
@@ -285,7 +285,7 @@ module RubyAMI
             let(:expected_action) { Action.new 'Status' }
 
             before do
-              expected_action.stubs(:complete?).returns true
+              expected_action.stub(:complete?).and_return true
             end
 
             it 'should raise an error' do
@@ -305,7 +305,7 @@ module RubyAMI
 
       describe 'from the queue' do
         it 'should send actions to the stream and set their responses' do
-          subject.actions_stream.expects(:send_action).with expected_action
+          subject.actions_stream.should_receive(:send_action).with expected_action
           subject.handle_message Event.new('FullyBooted')
 
           Thread.new do
@@ -321,7 +321,7 @@ module RubyAMI
         end
 
         it 'should not send another action if the first action has not yet received a response' do
-          subject.actions_stream.expects(:send_action).once.with expected_action
+          subject.actions_stream.should_receive(:send_action).once.with expected_action
           subject.handle_message Event.new('FullyBooted')
           actions = []
 
@@ -347,12 +347,12 @@ module RubyAMI
       let(:streams) { [mock_actions_stream, mock_events_stream] }
 
       before do
-        subject.stubs(:actions_stream).returns mock_actions_stream
-        subject.stubs(:events_stream).returns mock_events_stream
+        subject.stub(:actions_stream).and_return mock_actions_stream
+        subject.stub(:events_stream).and_return mock_events_stream
       end
 
       it 'should close both streams' do
-        streams.each { |s| s.expects :terminate }
+        streams.each { |s| s.should_receive :terminate }
         subject.stop
       end
     end
