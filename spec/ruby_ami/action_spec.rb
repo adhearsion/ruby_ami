@@ -19,22 +19,6 @@ module RubyAMI
       its(:has_causal_events?) { should be true }
     end
 
-    describe "Queues actions" do
-      subject { Action.new('Queues') }
-      its(:replies_with_action_id?) { should == false }
-    end
-
-    describe "IAXPeers actions" do
-      before { pending }
-      # FIXME: This test relies on the side effect that earlier tests have run
-      # and initialized the UnsupportedActionName::UNSUPPORTED_ACTION_NAMES
-      # constant for an "unknown" version of Asterisk.  This should be fixed
-      # to be more specific about which version of Asterisk is under test.
-      # IAXPeers is supported (with Action IDs!) since Asterisk 1.8
-      subject { Action.new('IAXPeers') }
-      its(:replies_with_action_id?) { should == false }
-    end
-
     describe "the ParkedCalls terminator event" do
       subject { Action.new('ParkedCalls') }
       its(:causal_event_terminator_name) { should == "parkedcallscomplete" }
@@ -159,30 +143,6 @@ module RubyAMI
       end
 
       it { should_not == :foo }
-    end
-
-    describe "#sync_timeout" do
-      it "should be 10 seconds" do
-        subject.sync_timeout.should be == 10
-      end
-
-      context "for an asynchronous Originate" do
-        let(:name) { 'Originate' }
-        let(:headers) { {:async => true} }
-
-        it "should be 60 seconds" do
-          subject.sync_timeout.should be == 10
-        end
-      end
-
-      context "for a synchronous Originate" do
-        let(:name) { 'Originate' }
-        let(:headers) { {:async => false} }
-
-        it "should be 60 seconds" do
-          subject.sync_timeout.should be == 60
-        end
-      end
     end
   end # Action
 end # RubyAMI

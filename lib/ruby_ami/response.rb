@@ -18,8 +18,8 @@ module RubyAMI
                   :text_body  # For "Response: Follows" sections
     attr_reader   :events
 
-    def initialize
-      @headers = Hash.new
+    def initialize(headers = {})
+      @headers = headers
     end
 
     def has_text_body?

@@ -22,10 +22,6 @@ module RubyAMI
       define_method("#{state}?") { @state == state }
     end
 
-    def replies_with_action_id?
-      !UnsupportedActionName::UNSUPPORTED_ACTION_NAMES.include? name
-    end
-
     ##
     # When sending an action with "causal events" (i.e. events which must be collected to form a proper
     # response), AMI should send a particular event which instructs us that no more events will be sent.
@@ -119,29 +115,5 @@ module RubyAMI
       to_s == other.to_s
     end
     alias :== :eql?
-
-    def sync_timeout
-      name.downcase == 'originate' && !headers[:async] ? 60 : 10
-    end
-
-    ##
-    # This class will be removed once this AMI library fully supports all known protocol anomalies.
-    #
-    class UnsupportedActionName < ArgumentError
-      UNSUPPORTED_ACTION_NAMES = %w[queues] unless defined? UNSUPPORTED_ACTION_NAMES
-
-      # Blacklist some actions depends on the Asterisk version
-      def self.preinitialize(version)
-        if version < 1.8
-          %w[iaxpeers muteaudio mixmonitormute aocmessage].each do |action|
-            UNSUPPORTED_ACTION_NAMES << action
-          end
-        end
-      end
-
-      def initialize(name)
-        super "At the moment this AMI library doesn't support the #{name.inspect} action because it causes a protocol anomaly. Support for it will be coming shortly."
-      end
-    end
   end
 end # RubyAMI

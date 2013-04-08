@@ -196,10 +196,7 @@ module RubyAMI
       let(:expected_action) { Action.new action_name, headers }
 
       let :expected_response do
-        Response.new.tap do |response|
-          response['ActionID'] = expected_action.action_id
-          response['Message'] = 'Action completed'
-        end
+        Response.new 'ActionID' => expected_action.action_id, 'Message' => 'Action completed'
       end
 
       let(:mock_actions_stream) { mock 'Actions Stream' }
@@ -241,10 +238,7 @@ module RubyAMI
 
         describe 'when an error is received' do
           let :expected_response do
-            Error.new.tap do |response|
-              response['ActionID'] = expected_action.action_id
-              response['Message'] = 'Action failed'
-            end
+            Error.new 'ActionID' => expected_action.action_id, 'Message' => 'Action failed'
           end
 
           it 'should be sent to the action' do
@@ -259,7 +253,7 @@ module RubyAMI
         end
 
         describe 'when an event is received' do
-          let(:event) { Event.new 'foo' }
+          let(:event) { Event.new 'foo', 'ActionID' => expected_action.action_id }
 
           let(:receive_event) { subject.handle_message event }
 
@@ -291,7 +285,7 @@ module RubyAMI
             it 'should raise an error' do
               receive_response
               receive_event
-              lambda { subject.handle_message Event.new('bar') }.should raise_error StandardError, /causal action/
+              lambda { subject.handle_message Event.new('bar', 'ActionID' => expected_action.action_id) }.should raise_error StandardError, /causal action/
             end
           end
 
@@ -318,24 +312,6 @@ module RubyAMI
 
           subject.handle_message expected_response
           expected_action.response.should be expected_response
-        end
-
-        it 'should not send another action if the first action has not yet received a response' do
-          subject.actions_stream.should_receive(:send_action).once.with expected_action
-          subject.handle_message Event.new('FullyBooted')
-          actions = []
-
-          2.times do
-            action = Action.new action_name, headers
-            actions << action
-            subject.send_action action
-          end
-
-          sleep 2
-
-          actions.should have(2).actions
-          actions[0].should be_sent
-          actions[1].should be_new
         end
       end
     end

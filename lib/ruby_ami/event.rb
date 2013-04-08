@@ -5,8 +5,8 @@ module RubyAMI
   class Event < Response
     attr_reader :name
 
-    def initialize(name)
-      super()
+    def initialize(name, headers = {})
+      super headers
       @name = name
     end
 

@@ -14,18 +14,12 @@ module RubyAMI
 
       @pending_actions  = {}
       @sent_actions     = {}
+      @causal_actions   = {}
       @actions_lock     = Mutex.new
 
       @action_queue = GirlFriday::WorkQueue.new(:actions, :size => 1, :error_handler => ErrorHandler) do |action|
         @actions_write_blocker.wait
         _send_action action
-        begin
-          action.response action.sync_timeout
-        rescue Timeout::Error => e
-          logger.error "Timed out waiting for a response to #{action}"
-        rescue RubyAMI::Error
-          nil
-        end
       end
 
       @message_processor = GirlFriday::WorkQueue.new(:messages, :size => 1, :error_handler => ErrorHandler) do |message|
@@ -76,11 +70,11 @@ module RubyAMI
         stop_writing_actions
         stop
       when Event
-        action = @current_action_with_causal_events
+        action = @causal_actions[message.action_id]
         if action
           message.action = action
           action << message
-          @current_action_with_causal_events = nil if action.complete?
+          @causal_actions.delete(action.action_id) if action.complete?
         else
           if message.name == 'FullyBooted'
             pass_event message
@@ -97,7 +91,7 @@ module RubyAMI
         # By this point the write loop will already have started blocking by calling the response() method on the
         # action. Because we must collect more events before we wake the write loop up again, let's create these
         # instance variable which will needed when the subsequent causal events come in.
-        @current_action_with_causal_events = action if action.has_causal_events?
+        @causal_actions[action.action_id] = action if action.has_causal_events?
 
         action << message
       end

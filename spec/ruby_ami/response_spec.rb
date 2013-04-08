@@ -6,19 +6,15 @@ module RubyAMI
     describe "equality" do
       context "with the same headers" do
         let :event1 do
-          Response.new.tap do |e|
-            e['Channel'] = 'SIP/101-3f3f'
-            e['Uniqueid'] = '1094154427.10'
-            e['Cause'] = '0'
-          end
+          Response.new 'Channel' => 'SIP/101-3f3f',
+                       'Uniqueid' => '1094154427.10',
+                       'Cause' => '0'
         end
 
         let :event2 do
-          Response.new.tap do |e|
-            e['Channel'] = 'SIP/101-3f3f'
-            e['Uniqueid'] = '1094154427.10'
-            e['Cause'] = '0'
-          end
+          Response.new 'Channel' => 'SIP/101-3f3f',
+                       'Uniqueid' => '1094154427.10',
+                       'Cause' => '0'
         end
 
         it "should be equal" do
@@ -28,19 +24,15 @@ module RubyAMI
 
       context "with different headers" do
         let :event1 do
-          Response.new.tap do |e|
-            e['Channel'] = 'SIP/101-3f3f'
-            e['Uniqueid'] = '1094154427.10'
-            e['Cause'] = '0'
-          end
+          Response.new 'Channel' => 'SIP/101-3f3f',
+                       'Uniqueid' => '1094154427.10',
+                       'Cause' => '0'
         end
 
         let :event2 do
-          Response.new.tap do |e|
-            e['Channel'] = 'SIP/101-3f3f'
-            e['Uniqueid'] = '1094154427.10'
-            e['Cause'] = '1'
-          end
+          Response.new 'Channel' => 'SIP/101-3f3f',
+                       'Uniqueid' => '1094154427.10',
+                       'Cause' => '1'
         end
 
         it "should not be equal" do

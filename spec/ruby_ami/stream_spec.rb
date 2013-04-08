@@ -81,11 +81,7 @@ Cause: 0
 
       client_messages.should be == [
         Stream::Connected.new,
-        Event.new('Hangup').tap do |e|
-          e['Channel'] = 'SIP/101-3f3f'
-          e['Uniqueid'] = '1094154427.10'
-          e['Cause'] = '0'
-        end,
+        Event.new('Hangup', 'Channel' => 'SIP/101-3f3f', 'Uniqueid' => '1094154427.10', 'Cause' => '0'),
         Stream::Disconnected.new
       ]
     end
@@ -102,10 +98,7 @@ Message: Authentication accepted
 
       client_messages.should be == [
         Stream::Connected.new,
-        Response.new.tap do |r|
-          r['ActionID'] = 'ee33eru2398fjj290'
-          r['Message'] = 'Authentication accepted'
-        end,
+        Response.new('ActionID' => 'ee33eru2398fjj290', 'Message' => 'Authentication accepted'),
         Stream::Disconnected.new
       ]
     end
