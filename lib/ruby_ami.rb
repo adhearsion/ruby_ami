@@ -14,10 +14,6 @@ module RubyAMI
   def self.new_uuid
     SecureRandom.uuid
   end
-  
-  def self.rbx?
-    RbConfig::CONFIG['RUBY_INSTALL_NAME'] == 'rbx'
-  end
 end
 
 %w{
