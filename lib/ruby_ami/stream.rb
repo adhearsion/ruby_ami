@@ -49,7 +49,7 @@ module RubyAMI
 
     def post_init
       @state = :started
-      @event_callback.call Connected.new
+      fire_event Connected.new
     end
 
     def send_data(data)
@@ -78,7 +78,7 @@ module RubyAMI
           action << message
           complete_causal_action_for_event message if action.complete?
         else
-          @event_callback.call message
+          fire_event message
         end
       when Response, Error
         action = sent_action_for_response message
@@ -94,6 +94,10 @@ module RubyAMI
     alias :error_received :message_received
 
     private
+
+    def fire_event(event)
+      @event_callback.call event
+    end
 
     def register_sent_action(action)
       @sent_actions[action.action_id] = action
@@ -124,7 +128,7 @@ module RubyAMI
       logger.debug "Finalizing stream"
       @socket.close if @socket
       @state = :stopped
-      @event_callback.call Disconnected.new
+      fire_event Disconnected.new
     end
   end
 end
