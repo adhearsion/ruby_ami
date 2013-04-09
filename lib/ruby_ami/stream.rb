@@ -94,7 +94,6 @@ module RubyAMI
         action = sent_action_for_response message
         raise StandardError, "Received an AMI response with an unrecognized ActionID! #{message.inspect}" unless action
         action << message
-        signal action.action_id if action.complete?
       end
     end
 
@@ -133,7 +132,6 @@ module RubyAMI
 
     def complete_causal_action_for_event(event)
       @causal_actions.delete event.action_id
-      signal event.action_id
     end
 
     def finalize
