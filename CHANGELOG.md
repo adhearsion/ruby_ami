@@ -1,5 +1,8 @@
 # [develop](https://github.com/adhearsion/ruby_ami)
 
+# [1.3.3](https://github.com/adhearsion/ruby_ami/compare/v1.3.2...v1.3.3) - [2013-04-09](https://rubygems.org/gems/ruby_ami/versions/1.3.3)
+  * Bugfix: DBGet actions are now not terminated specially
+
 # [1.3.2](https://github.com/adhearsion/ruby_ami/compare/v1.3.1...v1.3.2) - [2013-03-22](https://rubygems.org/gems/ruby_ami/versions/1.3.2)
   * CS: Avoid celluloid deprecation warnings
 
