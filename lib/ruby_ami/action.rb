@@ -49,8 +49,6 @@ module RubyAMI
       case name
       when "sippeers", "iaxpeers"
         "peerlistcomplete"
-      when "dbget"
-        "dbgetresponse"
       when "konferencelist"
         "conferencelistcomplete"
       else
