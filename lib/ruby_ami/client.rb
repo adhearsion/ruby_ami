@@ -6,9 +6,9 @@ module RubyAMI
     attr_reader :events_stream, :actions_stream
 
     def initialize(options)
-      @options          = options
-      @event_handler    = @options[:event_handler]
-      @state            = :stopped
+      @options        = options
+      @event_handler  = @options[:event_handler]
+      @state          = :stopped
     end
 
     [:started, :stopped, :ready].each do |state|
