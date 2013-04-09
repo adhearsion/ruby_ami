@@ -78,7 +78,13 @@ module RubyAMI
       end
     end
 
+    def no_wait_response
+      return unless @response.set_yet?
+      @response.resource
+    end
+
     def response=(other)
+      other.events = events if other.respond_to?(:events=)
       @state = :complete
       @response.resource = other
       @response_callback.call other if @response_callback

@@ -62,8 +62,14 @@ module RubyAMI
         action = Action.new('Command', 'Command' => 'RECORD FILE evil', 'ActionID' => 666, 'Events' => 'On')
         mocked_server(1, lambda { @stream.send_action action }) do |val, server|
           val.should == action.to_s
+
+          server.send_data <<-EVENT
+Response: Success
+ActionID: #{action.action_id}
+Message: Recording started
+
+          EVENT
         end
-        action.should be_sent
       end
 
       it "can send an action by properties" do
@@ -72,6 +78,13 @@ module RubyAMI
         action = Action.new('Command', 'Command' => 'RECORD FILE evil', 'ActionID' => 666, 'Events' => 'On')
         mocked_server(1, lambda { @stream.send_action('Command', 'Command' => 'RECORD FILE evil', 'ActionID' => 666, 'Events' => 'On') }) do |val, server|
           val.should == action.to_s
+
+          server.send_data <<-EVENT
+Response: Success
+ActionID: #{action.action_id}
+Message: Recording started
+
+          EVENT
         end
       end
     end
@@ -117,9 +130,30 @@ Message: Recording started
         action.response(1).should == Response.new('ActionID' => action.action_id, 'Message' => 'Recording started')
       end
 
+      it 'should be returned from #send_action' do
+        response = nil
+        mocked_server(1, lambda { response = @stream.send_action action }) do |val, server|
+          val.should == action.to_s
+
+          server.send_data <<-EVENT
+Response: Success
+ActionID: #{action.action_id}
+Message: Recording started
+
+          EVENT
+        end
+
+        response.should == Response.new('ActionID' => action.action_id, 'Message' => 'Recording started')
+      end
+
       describe 'when it is an error' do
         it 'should be set on the action' do
-          mocked_server(1, lambda { @stream.send_action action }) do |val, server|
+          send_action = lambda do
+            expect { @stream.send_action action }.to raise_error(RubyAMI::Error, 'Action failed')
+            @stream.should be_alive
+          end
+
+          mocked_server(1, send_action) do |val, server|
             val.should == action.to_s
 
             server.send_data <<-EVENT
@@ -138,7 +172,7 @@ Message: Action failed
         let(:action) { Action.new 'sippeers' }
 
         it "should not immediately set the action's response" do
-          mocked_server(1, lambda { @stream.send_action action }) do |val, server|
+          mocked_server(1, lambda { @stream.async.send_action action }) do |val, server|
             val.should == action.to_s
 
             server.send_data <<-EVENT
@@ -154,7 +188,7 @@ Message: Events to follow
 
         describe "followed by events" do
           it "should add events to the action, but not yet set the response" do
-            mocked_server(1, lambda { @stream.send_action action }) do |val, server|
+            mocked_server(1, lambda { @stream.async.send_action action }) do |val, server|
               val.should == action.to_s
 
               server.send_data <<-EVENT
@@ -178,8 +212,22 @@ ObjectName: usera
           end
 
           context "and a terminator event" do
+            let :expected_events do
+              [
+                Event.new('PeerEntry', 'ActionID' => action.action_id, 'Channeltype' => 'SIP', 'ObjectName' => 'usera'),
+                Event.new('PeerlistComplete', 'ActionID' => action.action_id, 'EventList' => 'Complete', 'ListItems' => '2')
+              ]
+            end
+
+            let :expected_response do
+              Response.new('ActionID' => action.action_id, 'Message' => 'Events to follow').tap do |response|
+                response.events = expected_events
+              end
+            end
+
             it "should add events to the action, and set the response" do
-              mocked_server(1, lambda { @stream.send_action action }) do |val, server|
+              response = nil
+              mocked_server(1, lambda { response = @stream.send_action action }) do |val, server|
                 val.should == action.to_s
 
                 server.send_data <<-EVENT
@@ -200,12 +248,8 @@ ActionID: #{action.action_id}
                 EVENT
               end
 
-              action.events.should eql([
-                Event.new('PeerEntry', 'ActionID' => action.action_id, 'Channeltype' => 'SIP', 'ObjectName' => 'usera'),
-                Event.new('PeerlistComplete', 'ActionID' => action.action_id, 'EventList' => 'Complete', 'ListItems' => '2')
-              ])
-
-              action.response(1).should == Response.new('ActionID' => action.action_id, 'Message' => 'Events to follow')
+              response.should == expected_response
+              action.response(1).should == expected_response
             end
           end
         end
