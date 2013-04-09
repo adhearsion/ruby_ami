@@ -19,8 +19,6 @@ module RubyAMI
 
     it { should be_stopped }
 
-    its(:streams) { should == [] }
-
     it 'should return when the timeout option is specified and reached' do
       pending
       options[:timeout] = 2

@@ -18,7 +18,6 @@ module RubyAMI
     def start
       @events_stream  = new_stream lambda { |event| handle_event event }
       @actions_stream = new_stream lambda { |message| handle_message message }
-      streams.each { |stream| stream.async.run }
       @state = :started
     end
 
@@ -62,7 +61,9 @@ module RubyAMI
     end
 
     def new_stream(callback)
-      Stream.new_link @options[:host], @options[:port], callback, logger, @options[:timeout]
+      stream = Stream.new_link @options[:host], @options[:port], callback, logger, @options[:timeout]
+      stream.async.run
+      stream
     end
 
     def logger
@@ -73,10 +74,6 @@ module RubyAMI
         logger.define_singleton_method :trace, logger.method(:debug)
         logger
       end
-    end
-
-    def streams
-      [actions_stream, events_stream].compact
     end
   end
 end
