@@ -56,11 +56,21 @@ module RubyAMI
         mocked_server 0, -> { @stream.started?.should be_true }
       end
 
-      it "can send a command" do
+      it "can send an action" do
         expect_connected_event
         expect_disconnected_event
         action = Action.new('Command', 'Command' => 'RECORD FILE evil', 'ActionID' => 666, 'Events' => 'On')
         mocked_server(1, lambda { @stream.send_action action }) do |val, server|
+          val.should == action.to_s
+        end
+        action.should be_sent
+      end
+
+      it "can send an action by properties" do
+        expect_connected_event
+        expect_disconnected_event
+        action = Action.new('Command', 'Command' => 'RECORD FILE evil', 'ActionID' => 666, 'Events' => 'On')
+        mocked_server(1, lambda { @stream.send_action('Command', 'Command' => 'RECORD FILE evil', 'ActionID' => 666, 'Events' => 'On') }) do |val, server|
           val.should == action.to_s
         end
       end
@@ -84,45 +94,121 @@ Cause: 0
       ]
     end
 
-    it 'sends responses to the client when the stream is ready' do
-      mocked_server(1, lambda { @stream.send_data 'Foo' }) do |val, server|
-        server.send_data <<-EVENT
+    describe 'when a response is received' do
+      before do
+        expect_connected_event
+        expect_disconnected_event
+      end
+
+      let(:action) { Action.new 'Command', 'Command' => 'RECORD FILE evil' }
+
+      it 'should be set on the action' do
+        mocked_server(1, lambda { @stream.send_action action }) do |val, server|
+          val.should == action.to_s
+
+          server.send_data <<-EVENT
 Response: Success
-ActionID: ee33eru2398fjj290
-Message: Authentication accepted
+ActionID: #{action.action_id}
+Message: Recording started
 
-        EVENT
-      end
-
-      client_messages.should be == [
-        Stream::Connected.new,
-        Response.new('ActionID' => 'ee33eru2398fjj290', 'Message' => 'Authentication accepted'),
-        Stream::Disconnected.new
-      ]
-    end
-
-    it 'sends error to the client when the stream is ready and a bad command was send' do
-      client.should_receive(:message_received).exactly(3).times.with do |r|
-        case @sequence
-        when 1
-          r.should be_a Stream::Connected
-        when 2
-          r.should be_a Error
-          r['ActionID'].should == 'ee33eru2398fjj290'
-          r['Message'].should == 'You stupid git'
-        when 3
-          r.should be_a Stream::Disconnected
+          EVENT
         end
-        @sequence += 1
+
+        action.response(1).should == Response.new('ActionID' => action.action_id, 'Message' => 'Recording started')
       end
 
-      mocked_server(1, lambda { @stream.send_data 'Foo' }) do |val, server|
-        server.send_data <<-EVENT
-Response: Error
-ActionID: ee33eru2398fjj290
-Message: You stupid git
+      describe 'when it is an error' do
+        it 'should be set on the action' do
+          mocked_server(1, lambda { @stream.send_action action }) do |val, server|
+            val.should == action.to_s
 
-        EVENT
+            server.send_data <<-EVENT
+Response: Error
+ActionID: #{action.action_id}
+Message: Action failed
+
+            EVENT
+          end
+
+          expect { action.response 1 }.to raise_error(RubyAMI::Error, 'Action failed')
+        end
+      end
+
+      describe 'for a causal action' do
+        let(:action) { Action.new 'sippeers' }
+
+        it "should not immediately set the action's response" do
+          mocked_server(1, lambda { @stream.send_action action }) do |val, server|
+            val.should == action.to_s
+
+            server.send_data <<-EVENT
+Response: Success
+ActionID: #{action.action_id}
+Message: Events to follow
+
+            EVENT
+          end
+
+          expect { action.response 1 }.to raise_error(Timeout::Error)
+        end
+
+        describe "followed by events" do
+          it "should add events to the action, but not yet set the response" do
+            mocked_server(1, lambda { @stream.send_action action }) do |val, server|
+              val.should == action.to_s
+
+              server.send_data <<-EVENT
+Response: Success
+ActionID: #{action.action_id}
+Message: Events to follow
+
+Event: PeerEntry
+ActionID: #{action.action_id}
+Channeltype: SIP
+ObjectName: usera
+
+              EVENT
+            end
+
+            action.events.should eql([
+              Event.new('PeerEntry', 'ActionID' => action.action_id, 'Channeltype' => 'SIP', 'ObjectName' => 'usera')
+            ])
+
+            expect { action.response 1 }.to raise_error(Timeout::Error)
+          end
+
+          context "and a terminator event" do
+            it "should add events to the action, and set the response" do
+              mocked_server(1, lambda { @stream.send_action action }) do |val, server|
+                val.should == action.to_s
+
+                server.send_data <<-EVENT
+Response: Success
+ActionID: #{action.action_id}
+Message: Events to follow
+
+Event: PeerEntry
+ActionID: #{action.action_id}
+Channeltype: SIP
+ObjectName: usera
+
+Event: PeerlistComplete
+EventList: Complete
+ListItems: 2
+ActionID: #{action.action_id}
+
+                EVENT
+              end
+
+              action.events.should eql([
+                Event.new('PeerEntry', 'ActionID' => action.action_id, 'Channeltype' => 'SIP', 'ObjectName' => 'usera'),
+                Event.new('PeerlistComplete', 'ActionID' => action.action_id, 'EventList' => 'Complete', 'ListItems' => '2')
+              ])
+
+              action.response(1).should == Response.new('ActionID' => action.action_id, 'Message' => 'Events to follow')
+            end
+          end
+        end
       end
     end
 

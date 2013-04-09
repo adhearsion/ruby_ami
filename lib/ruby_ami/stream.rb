@@ -23,6 +23,8 @@ module RubyAMI
       @host, @port, @event_callback, @logger, @timeout = host, port, event_callback, logger, timeout
       logger.debug "Starting up..."
       @lexer = Lexer.new self
+      @sent_actions   = {}
+      @causal_actions = {}
     end
 
     [:started, :stopped, :ready].each do |state|
@@ -54,9 +56,12 @@ module RubyAMI
       @socket.write data
     end
 
-    def send_action(action)
+    def send_action(action, headers = nil)
+      action = Action.new(action, headers) if headers
       logger.trace "[SEND] #{action.to_s}"
+      register_sent_action action
       send_data action.to_s
+      action.state = :sent
     end
 
     def receive_data(data)
@@ -66,7 +71,20 @@ module RubyAMI
 
     def message_received(message)
       logger.trace "[RECV] #{message.inspect}"
-      @event_callback.call message
+      case message
+      when Event
+        action = causal_action_for_event message
+        if action
+          action << message
+          complete_causal_action_for_event message if action.complete?
+        else
+          @event_callback.call message
+        end
+      when Response, Error
+        action = sent_action_for_response message
+        raise StandardError, "Received an AMI response with an unrecognized ActionID! #{message.inspect}" unless action
+        action << message
+      end
     end
 
     def syntax_error_encountered(ignored_chunk)
@@ -76,6 +94,31 @@ module RubyAMI
     alias :error_received :message_received
 
     private
+
+    def register_sent_action(action)
+      @sent_actions[action.action_id] = action
+      register_causal_action action if action.has_causal_events?
+    end
+
+    def sent_action_with_id(action_id)
+      @sent_actions.delete action_id
+    end
+
+    def sent_action_for_response(response)
+      sent_action_with_id response.action_id
+    end
+
+    def register_causal_action(action)
+      @causal_actions[action.action_id] = action
+    end
+
+    def causal_action_for_event(event)
+      @causal_actions[event.action_id]
+    end
+
+    def complete_causal_action_for_event(event)
+      @causal_actions.delete event.action_id
+    end
 
     def finalize
       logger.debug "Finalizing stream"

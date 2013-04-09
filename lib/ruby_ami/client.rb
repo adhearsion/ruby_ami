@@ -9,8 +9,6 @@ module RubyAMI
       @options          = options
       @event_handler    = @options[:event_handler]
       @state            = :stopped
-      @sent_actions     = {}
-      @causal_actions   = {}
     end
 
     [:started, :stopped, :ready].each do |state|
@@ -27,9 +25,7 @@ module RubyAMI
     def send_action(action, headers = {}, &block)
       (action.is_a?(Action) ? action : Action.new(action, headers, &block)).tap do |action|
         logger.trace "[SEND]: #{action.inspect}"
-        register_sent_action action
         actions_stream.send_action action
-        action.state = :sent
       end
     end
 
@@ -41,29 +37,7 @@ module RubyAMI
       when Stream::Disconnected
         terminate
       when Event
-        action = @causal_actions[message.action_id]
-        if action
-          message.action = action
-          action << message
-          @causal_actions.delete(action.action_id) if action.complete?
-        else
-          if message.name == 'FullyBooted'
-            pass_event message
-          else
-            raise StandardError, "Got an unexpected event on actions socket! This AMI command may have a multi-message response. Try making Adhearsion treat it as causal action #{message.inspect}"
-          end
-        end
-      when Response, Error
-        action = sent_action_with_id message.action_id
-        raise StandardError, "Received an AMI response with an unrecognized ActionID!! This may be an bug! #{message.inspect}" unless action
-        message.action = action
-
-        # By this point the write loop will already have started blocking by calling the response() method on the
-        # action. Because we must collect more events before we wake the write loop up again, let's create these
-        # instance variable which will needed when the subsequent causal events come in.
-        @causal_actions[action.action_id] = action if action.has_causal_events?
-
-        action << message
+        pass_event message
       end
     end
 
@@ -85,21 +59,11 @@ module RubyAMI
       @event_handler.call event if @event_handler.respond_to? :call
     end
 
-    def register_sent_action(action)
-      @sent_actions[action.action_id] = action
-    end
-
-    def sent_action_with_id(action_id)
-      @sent_actions.delete action_id
-    end
-
     def login_actions
       action = login_action do |response|
-        pass_event response if response.is_a? Error
         send_action 'Events', 'EventMask' => 'Off'
       end
 
-      register_sent_action action
       send_action action
     end
 
