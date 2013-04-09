@@ -1,6 +1,4 @@
 %w{
-  future-resource
-  logger
   celluloid/io
 }.each { |f| require f }
 

@@ -115,21 +115,6 @@ Cause: 0
 
       let(:action) { Action.new 'Command', 'Command' => 'RECORD FILE evil' }
 
-      it 'should be set on the action' do
-        mocked_server(1, lambda { @stream.send_action action }) do |val, server|
-          val.should == action.to_s
-
-          server.send_data <<-EVENT
-Response: Success
-ActionID: #{action.action_id}
-Message: Recording started
-
-          EVENT
-        end
-
-        action.response(1).should == Response.new('ActionID' => action.action_id, 'Message' => 'Recording started')
-      end
-
       it 'should be returned from #send_action' do
         response = nil
         mocked_server(1, lambda { response = @stream.send_action action }) do |val, server|
@@ -147,7 +132,7 @@ Message: Recording started
       end
 
       describe 'when it is an error' do
-        it 'should be set on the action' do
+        it 'should be raised by #send_action, but not kill the stream' do
           send_action = lambda do
             expect { @stream.send_action action }.to raise_error(RubyAMI::Error, 'Action failed')
             @stream.should be_alive
@@ -163,74 +148,31 @@ Message: Action failed
 
             EVENT
           end
-
-          expect { action.response 1 }.to raise_error(RubyAMI::Error, 'Action failed')
         end
       end
 
       describe 'for a causal action' do
         let(:action) { Action.new 'sippeers' }
 
-        it "should not immediately set the action's response" do
-          mocked_server(1, lambda { @stream.async.send_action action }) do |val, server|
+        let :expected_events do
+          [
+            Event.new('PeerEntry', 'ActionID' => action.action_id, 'Channeltype' => 'SIP', 'ObjectName' => 'usera'),
+            Event.new('PeerlistComplete', 'ActionID' => action.action_id, 'EventList' => 'Complete', 'ListItems' => '2')
+          ]
+        end
+
+        let :expected_response do
+          Response.new('ActionID' => action.action_id, 'Message' => 'Events to follow').tap do |response|
+            response.events = expected_events
+          end
+        end
+
+        it "should return the response with events" do
+          response = nil
+          mocked_server(1, lambda { response = @stream.send_action action }) do |val, server|
             val.should == action.to_s
 
             server.send_data <<-EVENT
-Response: Success
-ActionID: #{action.action_id}
-Message: Events to follow
-
-            EVENT
-          end
-
-          expect { action.response 1 }.to raise_error(Timeout::Error)
-        end
-
-        describe "followed by events" do
-          it "should add events to the action, but not yet set the response" do
-            mocked_server(1, lambda { @stream.async.send_action action }) do |val, server|
-              val.should == action.to_s
-
-              server.send_data <<-EVENT
-Response: Success
-ActionID: #{action.action_id}
-Message: Events to follow
-
-Event: PeerEntry
-ActionID: #{action.action_id}
-Channeltype: SIP
-ObjectName: usera
-
-              EVENT
-            end
-
-            action.events.should eql([
-              Event.new('PeerEntry', 'ActionID' => action.action_id, 'Channeltype' => 'SIP', 'ObjectName' => 'usera')
-            ])
-
-            expect { action.response 1 }.to raise_error(Timeout::Error)
-          end
-
-          context "and a terminator event" do
-            let :expected_events do
-              [
-                Event.new('PeerEntry', 'ActionID' => action.action_id, 'Channeltype' => 'SIP', 'ObjectName' => 'usera'),
-                Event.new('PeerlistComplete', 'ActionID' => action.action_id, 'EventList' => 'Complete', 'ListItems' => '2')
-              ]
-            end
-
-            let :expected_response do
-              Response.new('ActionID' => action.action_id, 'Message' => 'Events to follow').tap do |response|
-                response.events = expected_events
-              end
-            end
-
-            it "should add events to the action, and set the response" do
-              response = nil
-              mocked_server(1, lambda { response = @stream.send_action action }) do |val, server|
-                val.should == action.to_s
-
-                server.send_data <<-EVENT
 Response: Success
 ActionID: #{action.action_id}
 Message: Events to follow
@@ -245,13 +187,10 @@ EventList: Complete
 ListItems: 2
 ActionID: #{action.action_id}
 
-                EVENT
-              end
-
-              response.should == expected_response
-              action.response(1).should == expected_response
-            end
+            EVENT
           end
+
+          response.should == expected_response
         end
       end
     end
