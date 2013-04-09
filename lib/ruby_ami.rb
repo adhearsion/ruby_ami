@@ -1,7 +1,6 @@
 %w{
   future-resource
   logger
-  girl_friday
   countdownlatch
   celluloid/io
 }.each { |f| require f }

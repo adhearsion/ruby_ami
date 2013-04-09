@@ -1,34 +1,16 @@
 # encoding: utf-8
 module RubyAMI
   class Client
-    attr_reader :options, :action_queue, :events_stream, :actions_stream
+    include Celluloid
+
+    attr_reader :events_stream, :actions_stream
 
     def initialize(options)
       @options          = options
-      @logger           = options[:logger] || Logger.new(STDOUT)
-      @logger.level     = options[:log_level] || Logger::DEBUG if @logger
       @event_handler    = @options[:event_handler]
       @state            = :stopped
-
-      stop_writing_actions
-
-      @pending_actions  = {}
       @sent_actions     = {}
       @causal_actions   = {}
-      @actions_lock     = Mutex.new
-
-      @action_queue = GirlFriday::WorkQueue.new(:actions, :size => 1, :error_handler => ErrorHandler) do |action|
-        @actions_write_blocker.wait
-        _send_action action
-      end
-
-      @message_processor = GirlFriday::WorkQueue.new(:messages, :size => 1, :error_handler => ErrorHandler) do |message|
-        handle_message message
-      end
-
-      @event_processor = GirlFriday::WorkQueue.new(:events, :size => 2, :error_handler => ErrorHandler) do |event|
-        handle_event event
-      end
     end
 
     [:started, :stopped, :ready].each do |state|
@@ -36,39 +18,28 @@ module RubyAMI
     end
 
     def start
-      @events_stream  = new_stream lambda { |event| @event_processor << event }
-      @actions_stream = new_stream lambda { |message| @message_processor << message }
+      @events_stream  = new_stream lambda { |event| handle_event event }
+      @actions_stream = new_stream lambda { |message| handle_message message }
       streams.each { |stream| stream.async.run }
       @state = :started
-      streams.each { |s| Celluloid::Actor.join s }
-    end
-
-    def stop
-      streams.each do |stream|
-        begin
-          stream.terminate if stream.alive?
-        rescue => e
-          logger.error e if logger
-        end
-      end
     end
 
     def send_action(action, headers = {}, &block)
       (action.is_a?(Action) ? action : Action.new(action, headers, &block)).tap do |action|
-        logger.trace "[QUEUE]: #{action.inspect}" if logger
-        register_pending_action action
-        action_queue << action
+        logger.trace "[SEND]: #{action.inspect}"
+        register_sent_action action
+        actions_stream.send_action action
+        action.state = :sent
       end
     end
 
     def handle_message(message)
-      logger.trace "[RECV-ACTIONS]: #{message.inspect}" if logger
+      logger.trace "[RECV-ACTIONS]: #{message.inspect}"
       case message
       when Stream::Connected
         login_actions
       when Stream::Disconnected
-        stop_writing_actions
-        stop
+        terminate
       when Event
         action = @causal_actions[message.action_id]
         if action
@@ -78,7 +49,6 @@ module RubyAMI
         else
           if message.name == 'FullyBooted'
             pass_event message
-            start_writing_actions
           else
             raise StandardError, "Got an unexpected event on actions socket! This AMI command may have a multi-message response. Try making Adhearsion treat it as causal action #{message.inspect}"
           end
@@ -98,23 +68,15 @@ module RubyAMI
     end
 
     def handle_event(event)
-      logger.trace "[RECV-EVENTS]: #{event.inspect}" if logger
+      logger.trace "[RECV-EVENTS]: #{event.inspect}"
       case event
       when Stream::Connected
         login_events
       when Stream::Disconnected
-        stop
+        terminate
       else
         pass_event event
       end
-    end
-
-    def _send_action(action)
-      logger.trace "[SEND]: #{action.inspect}" if logger
-      transition_action_to_sent action
-      actions_stream.send_action action
-      action.state = :sent
-      action
     end
 
     private
@@ -123,31 +85,12 @@ module RubyAMI
       @event_handler.call event if @event_handler.respond_to? :call
     end
 
-    def register_pending_action(action)
-      @actions_lock.synchronize do
-        @pending_actions[action.action_id] = action
-      end
-    end
-
-    def transition_action_to_sent(action)
-      @actions_lock.synchronize do
-        @pending_actions.delete action.action_id
-        @sent_actions[action.action_id] = action
-      end
+    def register_sent_action(action)
+      @sent_actions[action.action_id] = action
     end
 
     def sent_action_with_id(action_id)
-      @actions_lock.synchronize do
-        @sent_actions.delete action_id
-      end
-    end
-
-    def start_writing_actions
-      @actions_write_blocker.countdown!
-    end
-
-    def stop_writing_actions
-      @actions_write_blocker = CountDownLatch.new 1
+      @sent_actions.delete action_id
     end
 
     def login_actions
@@ -156,8 +99,8 @@ module RubyAMI
         send_action 'Events', 'EventMask' => 'Off'
       end
 
-      register_pending_action action
-      Thread.new { _send_action action }
+      register_sent_action action
+      send_action action
     end
 
     def login_events
@@ -168,31 +111,28 @@ module RubyAMI
 
     def login_action(&block)
       Action.new 'Login',
-                 'Username' => options[:username],
-                 'Secret'   => options[:password],
+                 'Username' => @options[:username],
+                 'Secret'   => @options[:password],
                  'Events'   => 'On',
                  &block
     end
 
     def new_stream(callback)
-      Stream.new @options[:host], @options[:port], callback, logger, @options[:timeout]
+      Stream.new_link @options[:host], @options[:port], callback, logger, @options[:timeout]
     end
 
     def logger
       super
-    rescue NoMethodError
-      @logger
+    rescue
+      @logger ||= begin
+        logger = Logger
+        logger.define_singleton_method :trace, logger.method(:debug)
+        logger
+      end
     end
 
     def streams
       [actions_stream, events_stream].compact
-    end
-
-    class ErrorHandler
-      def handle(error)
-        puts error.message
-        puts error.backtrace.join("\n")
-      end
     end
   end
 end

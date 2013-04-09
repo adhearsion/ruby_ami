@@ -53,9 +53,7 @@ module RubyAMI
       it "should be started" do
         expect_connected_event
         expect_disconnected_event
-        mocked_server(0) do |val, server|
-          @stream.started?.should be_true
-        end
+        mocked_server 0, -> { @stream.started?.should be_true }
       end
 
       it "can send a command" do

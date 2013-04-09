@@ -20,7 +20,6 @@ Gem::Specification.new do |s|
 
   s.add_runtime_dependency %q<celluloid-io>, ["~> 0.13"]
   s.add_runtime_dependency %q<future-resource>, [">= 0"]
-  s.add_runtime_dependency %q<girl_friday>, [">= 0"]
   s.add_runtime_dependency %q<countdownlatch>, ["~> 1.0"]
 
   s.add_development_dependency %q<bundler>, ["~> 1.0"]

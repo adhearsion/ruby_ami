@@ -19,13 +19,10 @@ module RubyAMI
 
     it { should be_stopped }
 
-    its(:options) { should == options }
-
-    its(:action_queue) { should be_a GirlFriday::WorkQueue }
-
     its(:streams) { should == [] }
 
     it 'should return when the timeout option is specified and reached' do
+      pending
       options[:timeout] = 2
       options[:host] = '192.0.2.1' # unreachable IP that will generally cause a timeout (RFC 5737)
 
@@ -64,7 +61,7 @@ module RubyAMI
 
         before do
           Action.any_instance.stub(:response).and_return(true)
-          subject.stub(:actions_stream).and_return mock_actions_stream
+          subject.wrapped_object.stub(:actions_stream).and_return mock_actions_stream
         end
 
         it 'should log in' do
@@ -72,7 +69,7 @@ module RubyAMI
             action.to_s.should == expected_login_action.to_s
           end
 
-          subject.handle_message(Stream::Connected.new).join
+          subject.handle_message Stream::Connected.new
         end
       end
 
@@ -87,7 +84,7 @@ module RubyAMI
         end
 
         before do
-          subject.stub(:events_stream).and_return mock_events_stream
+          subject.wrapped_object.stub(:events_stream).and_return mock_events_stream
         end
 
         it 'should log in' do
@@ -101,37 +98,16 @@ module RubyAMI
     end
 
     describe 'when the events stream disconnects' do
-      it 'should stop' do
-        subject.should_receive(:stop).once
+      it 'should shut down the client' do
         subject.handle_event Stream::Disconnected.new
-        event_handler.should be_empty
+        subject.should_not be_alive
       end
     end
 
     describe 'when the actions stream disconnects' do
-      before do
-        Action.any_instance.stub(:response).and_return(true)
-      end
-
-      it 'should prevent further actions being sent' do
-        subject.should_receive(:_send_action).once
-
-        GirlFriday::WorkQueue.immediate!
-        subject.handle_message Stream::Connected.new
-        GirlFriday::WorkQueue.queue!
+      it 'should shut down the client' do
         subject.handle_message Stream::Disconnected.new
-
-        action = Action.new 'foo'
-        subject.send_action action
-
-        sleep 2
-
-        action.should be_new
-      end
-
-      it 'should stop' do
-        subject.should_receive(:stop).once
-        subject.handle_message Stream::Disconnected.new
+        subject.should_not be_alive
       end
     end
 
@@ -165,20 +141,15 @@ module RubyAMI
         event_handler.should == [event]
       end
 
-      it 'should begin writing actions' do
-        subject.should_receive(:start_writing_actions).once
-        subject.handle_message event
-      end
-
       it 'should turn off events' do
         Action.any_instance.stub(:response).and_return true
-        subject.stub(:actions_stream).and_return mock_actions_stream
+        subject.wrapped_object.stub(:actions_stream).and_return mock_actions_stream
 
         mock_actions_stream.should_receive(:send_action).once.with expected_login_action
         mock_actions_stream.should_receive(:send_action).once.with expected_events_off_action
 
-        login_action = subject.handle_message(Stream::Connected.new).join
-        login_action.value.response = true
+        login_action = subject.handle_message Stream::Connected.new
+        login_action.response = true
 
         subject.handle_message event
         sleep 0.5
@@ -202,134 +173,88 @@ module RubyAMI
       let(:mock_actions_stream) { mock 'Actions Stream' }
 
       before do
-        subject.stub(:actions_stream).and_return mock_actions_stream
+        subject.wrapped_object.stub(:actions_stream).and_return mock_actions_stream
         subject.stub(:login_actions).and_return nil
+        subject.actions_stream.should_receive(:send_action).with expected_action
+        subject.send_action expected_action
       end
 
-      it 'should queue up actions to be sent' do
-        subject.handle_message Stream::Connected.new
-        subject.action_queue.should_receive(:<<).with expected_action
-        subject.send_action action_name, headers
+      it 'should mark the action sent' do
+        expected_action.should be_sent
       end
 
-      describe 'forcibly for testing' do
-        before do
-          subject.actions_stream.should_receive(:send_action).with expected_action
-          subject._send_action expected_action
+      let(:receive_response) { subject.handle_message expected_response }
+
+      describe 'when a response is received' do
+        it 'should be sent to the action' do
+          expected_action.should_receive(:<<).once.with expected_response
+          receive_response
         end
 
-        it 'should mark the action sent' do
-          expected_action.should be_sent
+        it 'should know its action' do
+          receive_response
+          expected_response.action.should be expected_action
+        end
+      end
+
+      describe 'when an error is received' do
+        let :expected_response do
+          Error.new 'ActionID' => expected_action.action_id, 'Message' => 'Action failed'
         end
 
-        let(:receive_response) { subject.handle_message expected_response }
+        it 'should be sent to the action' do
+          expected_action.should_receive(:<<).once.with expected_response
+          receive_response
+        end
 
-        describe 'when a response is received' do
+        it 'should know its action' do
+          receive_response
+          expected_response.action.should be expected_action
+        end
+      end
+
+      describe 'when an event is received' do
+        let(:event) { Event.new 'foo', 'ActionID' => expected_action.action_id }
+
+        let(:receive_event) { subject.handle_message event }
+
+        context 'for a causal event' do
+          let(:expected_action) { Action.new 'Status' }
+
           it 'should be sent to the action' do
             expected_action.should_receive(:<<).once.with expected_response
+            expected_action.should_receive(:<<).once.with event
             receive_response
+            receive_event
           end
 
           it 'should know its action' do
+            expected_action.stub :<<
             receive_response
-            expected_response.action.should be expected_action
+            receive_event
+            event.action.should be expected_action
           end
         end
 
-        describe 'when an error is received' do
-          let :expected_response do
-            Error.new 'ActionID' => expected_action.action_id, 'Message' => 'Action failed'
+        context 'for a causal action which is complete' do
+          let(:expected_action) { Action.new 'Status' }
+
+          before do
+            expected_action.stub(:complete?).and_return true
           end
 
-          it 'should be sent to the action' do
-            expected_action.should_receive(:<<).once.with expected_response
+          it 'should raise an error' do
             receive_response
-          end
-
-          it 'should know its action' do
-            receive_response
-            expected_response.action.should be expected_action
+            receive_event
+            lambda { subject.handle_message Event.new('bar', 'ActionID' => expected_action.action_id) }.should raise_error StandardError, /causal action/
           end
         end
 
-        describe 'when an event is received' do
-          let(:event) { Event.new 'foo', 'ActionID' => expected_action.action_id }
-
-          let(:receive_event) { subject.handle_message event }
-
-          context 'for a causal event' do
-            let(:expected_action) { Action.new 'Status' }
-
-            it 'should be sent to the action' do
-              expected_action.should_receive(:<<).once.with expected_response
-              expected_action.should_receive(:<<).once.with event
-              receive_response
-              receive_event
-            end
-
-            it 'should know its action' do
-              expected_action.stub :<<
-              receive_response
-              receive_event
-              event.action.should be expected_action
-            end
-          end
-
-          context 'for a causal action which is complete' do
-            let(:expected_action) { Action.new 'Status' }
-
-            before do
-              expected_action.stub(:complete?).and_return true
-            end
-
-            it 'should raise an error' do
-              receive_response
-              receive_event
-              lambda { subject.handle_message Event.new('bar', 'ActionID' => expected_action.action_id) }.should raise_error StandardError, /causal action/
-            end
-          end
-
-          context 'for a non-causal action' do
-            it 'should raise an error' do
-              lambda { receive_event }.should raise_error StandardError, /causal action/
-            end
+        context 'for a non-causal action' do
+          it 'should raise an error' do
+            lambda { receive_event }.should raise_error StandardError, /causal action/
           end
         end
-      end
-
-      describe 'from the queue' do
-        it 'should send actions to the stream and set their responses' do
-          subject.actions_stream.should_receive(:send_action).with expected_action
-          subject.handle_message Event.new('FullyBooted')
-
-          Thread.new do
-            GirlFriday::WorkQueue.immediate!
-            subject.send_action expected_action
-            GirlFriday::WorkQueue.queue!
-          end
-
-          sleep 0.1
-
-          subject.handle_message expected_response
-          expected_action.response.should be expected_response
-        end
-      end
-    end
-
-    describe '#stop' do
-      let(:mock_actions_stream) { mock 'Actions Stream', :alive? => true }
-      let(:mock_events_stream) { mock 'Events Stream', :alive? => true }
-
-      let(:streams) { [mock_actions_stream, mock_events_stream] }
-
-      before do
-        subject.stub(:actions_stream).and_return mock_actions_stream
-        subject.stub(:events_stream).and_return mock_events_stream
-      end
-
-      it 'should close both streams' do
-        streams.each { |s| s.should_receive :terminate }
-        subject.stop
       end
     end
   end
