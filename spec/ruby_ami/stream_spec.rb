@@ -256,6 +256,28 @@ ActionID: #{action.action_id}
       end
     end
 
+    it 'can log itself in' do
+      expect_connected_event
+      expect_disconnected_event
+      mocked_server(1, lambda { @stream.login 'username', 'password', 'On' }) do |val, server|
+        val.should == <<-ACTION
+Action: login\r
+ActionID: #{RubyAMI.new_uuid}\r
+Username: username\r
+Secret: password\r
+Events: On\r
+\r
+        ACTION
+
+        server.send_data <<-EVENT
+Response: Success
+ActionID: #{RubyAMI.new_uuid}
+Message: Authentication accepted
+
+        EVENT
+      end
+    end
+
     it 'puts itself in the stopped state and fires a disconnected event when unbound' do
       expect_connected_event
       expect_disconnected_event

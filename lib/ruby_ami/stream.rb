@@ -68,6 +68,13 @@ module RubyAMI
       end
     end
 
+    def login(username, password, event_mask = 'On')
+      send_action 'Login',
+        'Username' => username,
+        'Secret'   => password,
+        'Events'   => event_mask
+    end
+
     def receive_data(data)
       logger.trace "[RECV] #{data}"
       @lexer << data
