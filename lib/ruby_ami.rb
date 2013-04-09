@@ -1,7 +1,6 @@
 %w{
   future-resource
   logger
-  countdownlatch
   celluloid/io
 }.each { |f| require f }
 

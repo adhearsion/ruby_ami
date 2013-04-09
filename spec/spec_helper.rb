@@ -1,7 +1,6 @@
 # encoding: utf-8
 
 require 'ruby_ami'
-require 'countdownlatch'
 
 Dir[File.dirname(__FILE__) + "/support/**/*.rb"].each {|f| require f}
 
