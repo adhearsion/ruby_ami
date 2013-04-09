@@ -1,18 +1,20 @@
 FIXTURES = YAML.load_file File.dirname(__FILE__) + "/ami_fixtures.yml"
 
-def metaclass
-  class << self
-    self
+class Object
+  def metaclass
+    class << self
+      self
+    end
   end
-end
 
-def meta_eval(&block)
-  metaclass.instance_eval &block
-end
+  def meta_eval(&block)
+    metaclass.instance_eval &block
+  end
 
-def meta_def(name, &block)
-  meta_eval do
-    define_method name, &block
+  def meta_def(name, &block)
+    meta_eval do
+      define_method name, &block
+    end
   end
 end
 
