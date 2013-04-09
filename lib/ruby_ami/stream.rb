@@ -61,7 +61,7 @@ module RubyAMI
       logger.trace "[SEND] #{action.to_s}"
       register_sent_action action
       send_data action.to_s
-      wait action.action_id
+      action.condition.wait
       action.response.tap do |resp|
         abort resp if resp.is_a? Exception
       end
