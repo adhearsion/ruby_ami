@@ -22,18 +22,16 @@ module RubyAMI
       @state = :started
     end
 
-    def send_action(action, headers = {}, &block)
-      (action.is_a?(Action) ? action : Action.new(action, headers, &block)).tap do |action|
-        logger.trace "[SEND]: #{action.inspect}"
-        actions_stream.send_action action
-      end
+    def send_action(*args)
+      actions_stream.send_action *args
     end
 
     def handle_message(message)
       logger.trace "[RECV-ACTIONS]: #{message.inspect}"
       case message
       when Stream::Connected
-        login_actions
+        login_stream actions_stream
+        send_action 'Events', 'EventMask' => 'Off'
       when Stream::Disconnected
         terminate
       when Event
@@ -45,7 +43,7 @@ module RubyAMI
       logger.trace "[RECV-EVENTS]: #{event.inspect}"
       case event
       when Stream::Connected
-        login_events
+        login_stream events_stream
       when Stream::Disconnected
         terminate
       else
@@ -59,26 +57,8 @@ module RubyAMI
       @event_handler.call event if @event_handler.respond_to? :call
     end
 
-    def login_actions
-      action = login_action do |response|
-        send_action 'Events', 'EventMask' => 'Off'
-      end
-
-      send_action action
-    end
-
-    def login_events
-      login_action.tap do |action|
-        events_stream.send_action action
-      end
-    end
-
-    def login_action(&block)
-      Action.new 'Login',
-                 'Username' => @options[:username],
-                 'Secret'   => @options[:password],
-                 'Events'   => 'On',
-                 &block
+    def login_stream(stream)
+      stream.login @options[:username], @options[:password], 'On'
     end
 
     def new_stream(callback)

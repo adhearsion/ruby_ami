@@ -52,22 +52,13 @@ module RubyAMI
       context 'when the actions stream connects' do
         let(:mock_actions_stream) { mock 'Actions Stream' }
 
-        let :expected_login_action do
-          Action.new 'Login',
-                     'Username' => 'username',
-                     'Secret'   => 'password',
-                     'Events'   => 'On'
-        end
-
         before do
-          Action.any_instance.stub(:response).and_return(true)
           subject.wrapped_object.stub(:actions_stream).and_return mock_actions_stream
         end
 
         it 'should log in' do
-          mock_actions_stream.should_receive(:send_action).with do |action|
-            action.to_s.should == expected_login_action.to_s
-          end
+          mock_actions_stream.should_receive(:login).with 'username', 'password', 'On'
+          mock_actions_stream.should_receive(:send_action).with 'Events', 'EventMask' => 'Off'
 
           subject.handle_message Stream::Connected.new
         end
@@ -76,19 +67,12 @@ module RubyAMI
       context 'when the events stream connects' do
         let(:mock_events_stream) { mock 'Events Stream' }
 
-        let :expected_login_action do
-          Action.new 'Login',
-                     'Username' => 'username',
-                     'Secret'   => 'password',
-                     'Events'   => 'On'
-        end
-
         before do
           subject.wrapped_object.stub(:events_stream).and_return mock_events_stream
         end
 
         it 'should log in' do
-          mock_events_stream.should_receive(:send_action).with expected_login_action
+          mock_events_stream.should_receive(:login).with 'username', 'password', 'On'
 
           subject.handle_event Stream::Connected.new
 
@@ -117,42 +101,6 @@ module RubyAMI
       it 'should call the event handler' do
         subject.handle_event event
         event_handler.should == [event]
-      end
-    end
-
-    describe 'when a FullyBooted event is received on the actions connection' do
-      let(:event) { Event.new 'FullyBooted' }
-
-      let(:mock_actions_stream) { mock 'Actions Stream' }
-
-      let :expected_login_action do
-        Action.new 'Login',
-                   'Username' => 'username',
-                   'Secret'   => 'password',
-                   'Events'   => 'On'
-      end
-
-      let :expected_events_off_action do
-        Action.new 'Events', 'EventMask' => 'Off'
-      end
-
-      it 'should call the event handler' do
-        subject.handle_message event
-        event_handler.should == [event]
-      end
-
-      it 'should turn off events' do
-        Action.any_instance.stub(:response).and_return true
-        subject.wrapped_object.stub(:actions_stream).and_return mock_actions_stream
-
-        mock_actions_stream.should_receive(:send_action).once.with expected_login_action
-        mock_actions_stream.should_receive(:send_action).once.with expected_events_off_action
-
-        login_action = subject.handle_message Stream::Connected.new
-        login_action.response = true
-
-        subject.handle_message event
-        sleep 0.5
       end
     end
   end
