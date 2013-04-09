@@ -56,8 +56,8 @@ module RubyAMI
       @socket.write data
     end
 
-    def send_action(action, headers = nil)
-      action = Action.new(action, headers) if headers
+    def send_action(name, headers = {})
+      action = Action.new name, headers
       logger.trace "[SEND] #{action.to_s}"
       register_sent_action action
       send_data action.to_s

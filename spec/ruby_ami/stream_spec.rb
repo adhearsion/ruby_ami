@@ -59,29 +59,36 @@ module RubyAMI
       it "can send an action" do
         expect_connected_event
         expect_disconnected_event
-        action = Action.new('Command', 'Command' => 'RECORD FILE evil', 'ActionID' => 666, 'Events' => 'On')
-        mocked_server(1, lambda { @stream.send_action action }) do |val, server|
-          val.should == action.to_s
+        mocked_server(1, lambda { @stream.send_action('Command') }) do |val, server|
+          val.should == <<-ACTION
+Action: command\r
+ActionID: #{RubyAMI.new_uuid}\r
+\r
+        ACTION
 
           server.send_data <<-EVENT
 Response: Success
-ActionID: #{action.action_id}
+ActionID: #{RubyAMI.new_uuid}
 Message: Recording started
 
           EVENT
         end
       end
 
-      it "can send an action by properties" do
+      it "can send an action with headers" do
         expect_connected_event
         expect_disconnected_event
-        action = Action.new('Command', 'Command' => 'RECORD FILE evil', 'ActionID' => 666, 'Events' => 'On')
-        mocked_server(1, lambda { @stream.send_action('Command', 'Command' => 'RECORD FILE evil', 'ActionID' => 666, 'Events' => 'On') }) do |val, server|
-          val.should == action.to_s
+        mocked_server(1, lambda { @stream.send_action('Command', 'Command' => 'RECORD FILE evil') }) do |val, server|
+          val.should == <<-ACTION
+Action: command\r
+ActionID: #{RubyAMI.new_uuid}\r
+Command: RECORD FILE evil\r
+\r
+        ACTION
 
           server.send_data <<-EVENT
 Response: Success
-ActionID: #{action.action_id}
+ActionID: #{RubyAMI.new_uuid}
 Message: Recording started
 
           EVENT
@@ -113,37 +120,31 @@ Cause: 0
         expect_disconnected_event
       end
 
-      let(:action) { Action.new 'Command', 'Command' => 'RECORD FILE evil' }
-
       it 'should be returned from #send_action' do
         response = nil
-        mocked_server(1, lambda { response = @stream.send_action action }) do |val, server|
-          val.should == action.to_s
-
+        mocked_server(1, lambda { response = @stream.send_action 'Command', 'Command' => 'RECORD FILE evil' }) do |val, server|
           server.send_data <<-EVENT
 Response: Success
-ActionID: #{action.action_id}
+ActionID: #{RubyAMI.new_uuid}
 Message: Recording started
 
           EVENT
         end
 
-        response.should == Response.new('ActionID' => action.action_id, 'Message' => 'Recording started')
+        response.should == Response.new('ActionID' => RubyAMI.new_uuid, 'Message' => 'Recording started')
       end
 
       describe 'when it is an error' do
         it 'should be raised by #send_action, but not kill the stream' do
           send_action = lambda do
-            expect { @stream.send_action action }.to raise_error(RubyAMI::Error, 'Action failed')
+            expect { @stream.send_action 'status' }.to raise_error(RubyAMI::Error, 'Action failed')
             @stream.should be_alive
           end
 
           mocked_server(1, send_action) do |val, server|
-            val.should == action.to_s
-
             server.send_data <<-EVENT
 Response: Error
-ActionID: #{action.action_id}
+ActionID: #{RubyAMI.new_uuid}
 Message: Action failed
 
             EVENT
@@ -152,40 +153,36 @@ Message: Action failed
       end
 
       describe 'for a causal action' do
-        let(:action) { Action.new 'sippeers' }
-
         let :expected_events do
           [
-            Event.new('PeerEntry', 'ActionID' => action.action_id, 'Channeltype' => 'SIP', 'ObjectName' => 'usera'),
-            Event.new('PeerlistComplete', 'ActionID' => action.action_id, 'EventList' => 'Complete', 'ListItems' => '2')
+            Event.new('PeerEntry', 'ActionID' => RubyAMI.new_uuid, 'Channeltype' => 'SIP', 'ObjectName' => 'usera'),
+            Event.new('PeerlistComplete', 'ActionID' => RubyAMI.new_uuid, 'EventList' => 'Complete', 'ListItems' => '2')
           ]
         end
 
         let :expected_response do
-          Response.new('ActionID' => action.action_id, 'Message' => 'Events to follow').tap do |response|
+          Response.new('ActionID' => RubyAMI.new_uuid, 'Message' => 'Events to follow').tap do |response|
             response.events = expected_events
           end
         end
 
         it "should return the response with events" do
           response = nil
-          mocked_server(1, lambda { response = @stream.send_action action }) do |val, server|
-            val.should == action.to_s
-
+          mocked_server(1, lambda { response = @stream.send_action 'sippeers' }) do |val, server|
             server.send_data <<-EVENT
 Response: Success
-ActionID: #{action.action_id}
+ActionID: #{RubyAMI.new_uuid}
 Message: Events to follow
 
 Event: PeerEntry
-ActionID: #{action.action_id}
+ActionID: #{RubyAMI.new_uuid}
 Channeltype: SIP
 ObjectName: usera
 
 Event: PeerlistComplete
 EventList: Complete
 ListItems: 2
-ActionID: #{action.action_id}
+ActionID: #{RubyAMI.new_uuid}
 
             EVENT
           end
