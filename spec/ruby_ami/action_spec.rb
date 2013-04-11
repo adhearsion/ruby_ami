@@ -7,7 +7,9 @@ module RubyAMI
     let(:headers) { {'foo' => 'bar'} }
 
     subject do
-      described_class.new name, headers
+      described_class.new name, headers do |response|
+        @callback_result = response
+      end
     end
 
     it { should_not be_complete }
@@ -43,6 +45,10 @@ module RubyAMI
 
           it 'should set the response' do
             subject.response.should be response
+          end
+
+          it 'should call the callback' do
+            @callback_result.should be response
           end
 
           it { should be_complete }

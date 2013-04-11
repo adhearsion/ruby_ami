@@ -1,18 +1,18 @@
 module RubyAMI
   class Action
-    attr_reader :name, :headers, :action_id, :response, :condition
+    attr_reader :name, :headers, :action_id, :response
 
     CAUSAL_EVENT_NAMES = %w[queuestatus sippeers iaxpeers parkedcalls dahdishowchannels coreshowchannels
                             dbget status agents konferencelist confbridgelist confbridgelistrooms] unless defined? CAUSAL_EVENT_NAMES
 
-    def initialize(name, headers = {})
+    def initialize(name, headers = {}, &block)
       @name       = name.to_s.downcase.freeze
       @headers    = headers.freeze
       @action_id  = RubyAMI.new_uuid
       @response   = nil
       @complete   = false
       @events     = []
-      @condition  = Celluloid::Condition.new
+      @callback   = block
     end
 
     def complete?
@@ -93,8 +93,7 @@ module RubyAMI
 
     def complete!
       @complete = true
-      condition.signal response
-    rescue Celluloid::ConditionError
+      @callback.call response
     end
   end
 end # RubyAMI

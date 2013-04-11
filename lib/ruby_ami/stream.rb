@@ -57,11 +57,14 @@ module RubyAMI
     end
 
     def send_action(name, headers = {})
-      action = Action.new name, headers
+      condition = Celluloid::Condition.new
+      action = Action.new name, headers do |response|
+        condition.signal response
+      end
       logger.trace "[SEND] #{action.to_s}"
       register_sent_action action
       send_data action.to_s
-      action.condition.wait
+      condition.wait
       action.response.tap do |resp|
         abort resp if resp.is_a? Exception
       end
