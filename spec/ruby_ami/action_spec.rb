@@ -107,14 +107,6 @@ module RubyAMI
       end
     end
 
-    describe 'setting the response' do
-      let(:response) { Response.new }
-
-      before { subject << response }
-
-      its(:response) { should == response }
-    end
-
     describe 'comparison' do
       describe 'with another Action' do
         context 'with identical name and headers' do
