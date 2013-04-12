@@ -18,9 +18,9 @@ module RubyAMI
 
     finalizer :finalize
 
-    def initialize(host, port, event_callback, logger = Logger, timeout = 0)
+    def initialize(host, port, username, password, event_callback, logger = Logger, timeout = 0)
       super()
-      @host, @port, @event_callback, @logger, @timeout = host, port, event_callback, logger, timeout
+      @host, @port, @username, @password, @event_callback, @logger, @timeout = host, port, username, password, event_callback, logger, timeout
       logger.debug "Starting up..."
       @lexer = Lexer.new self
       @sent_actions   = {}
@@ -50,6 +50,7 @@ module RubyAMI
     def post_init
       @state = :started
       fire_event Connected.new
+      login @username, @password if @username && @password
     end
 
     def send_data(data)
@@ -58,23 +59,13 @@ module RubyAMI
 
     def send_action(name, headers = {})
       condition = Celluloid::Condition.new
-      action = Action.new name, headers do |response|
+      action = dispatch_action name, headers do |response|
         condition.signal response
       end
-      logger.trace "[SEND] #{action.to_s}"
-      register_sent_action action
-      send_data action.to_s
       condition.wait
       action.response.tap do |resp|
         abort resp if resp.is_a? Exception
       end
-    end
-
-    def login(username, password, event_mask = 'On')
-      send_action 'Login',
-        'Username' => username,
-        'Secret'   => password,
-        'Events'   => event_mask
     end
 
     def receive_data(data)
@@ -107,6 +98,21 @@ module RubyAMI
     alias :error_received :message_received
 
     private
+
+    def login(username, password, event_mask = 'On')
+      dispatch_action 'Login',
+        'Username' => username,
+        'Secret'   => password,
+        'Events'   => event_mask
+    end
+
+    def dispatch_action(*args, &block)
+      action = Action.new *args, &block
+      logger.trace "[SEND] #{action.to_s}"
+      register_sent_action action
+      send_data action.to_s
+      action
+    end
 
     def fire_event(event)
       @event_callback.call event

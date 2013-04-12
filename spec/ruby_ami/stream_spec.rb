@@ -26,11 +26,14 @@ module RubyAMI
       messages
     end
 
+    let(:username) { nil }
+    let(:password) { nil }
+
     def mocked_server(times = nil, fake_client = nil, &block)
       mock_target = MockServer.new
       mock_target.should_receive(:receive_data).send(*(times ? [:exactly, times] : [:at_least, 1])).with &block
       s = ServerMock.new '127.0.0.1', server_port, mock_target
-      @stream = Stream.new '127.0.0.1', server_port, lambda { |m| client.message_received m }
+      @stream = Stream.new '127.0.0.1', server_port, username, password, lambda { |m| client.message_received m }
       @stream.async.run
       fake_client.call if fake_client.respond_to? :call
       Celluloid::Actor.join s
@@ -92,6 +95,33 @@ ActionID: #{RubyAMI.new_uuid}
 Message: Recording started
 
           EVENT
+        end
+      end
+
+      context "with a username and password set" do
+        let(:username) { 'fred' }
+        let(:password) { 'jones' }
+
+        it "should log itself in" do
+          expect_connected_event
+          expect_disconnected_event
+          mocked_server(1, lambda { }) do |val, server|
+            val.should == <<-ACTION
+Action: login\r
+ActionID: #{RubyAMI.new_uuid}\r
+Username: fred\r
+Secret: jones\r
+Events: On\r
+\r
+          ACTION
+
+            server.send_data <<-EVENT
+Response: Success
+ActionID: #{RubyAMI.new_uuid}
+Message: Authentication accepted
+
+            EVENT
+          end
         end
       end
     end
@@ -189,28 +219,6 @@ ActionID: #{RubyAMI.new_uuid}
 
           response.should == expected_response
         end
-      end
-    end
-
-    it 'can log itself in' do
-      expect_connected_event
-      expect_disconnected_event
-      mocked_server(1, lambda { @stream.login 'username', 'password', 'On' }) do |val, server|
-        val.should == <<-ACTION
-Action: login\r
-ActionID: #{RubyAMI.new_uuid}\r
-Username: username\r
-Secret: password\r
-Events: On\r
-\r
-        ACTION
-
-        server.send_data <<-EVENT
-Response: Success
-ActionID: #{RubyAMI.new_uuid}
-Message: Authentication accepted
-
-        EVENT
       end
     end
 

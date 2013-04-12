@@ -93,7 +93,7 @@ module RubyAMI
 
     def complete!
       @complete = true
-      @callback.call response
+      @callback.call response if @callback
     end
   end
 end # RubyAMI

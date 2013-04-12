@@ -29,7 +29,6 @@ module RubyAMI
       logger.trace "[RECV-ACTIONS]: #{message.inspect}"
       case message
       when Stream::Connected
-        login_stream actions_stream
         send_action 'Events', 'EventMask' => 'Off'
       when Stream::Disconnected
         terminate
@@ -42,7 +41,6 @@ module RubyAMI
       logger.trace "[RECV-EVENTS]: #{event.inspect}"
       case event
       when Stream::Connected
-        login_stream events_stream
       when Stream::Disconnected
         terminate
       else
@@ -56,12 +54,8 @@ module RubyAMI
       @event_handler.call event if @event_handler.respond_to? :call
     end
 
-    def login_stream(stream)
-      stream.login @options[:username], @options[:password], 'On'
-    end
-
     def new_stream(callback)
-      stream = Stream.new_link @options[:host], @options[:port], callback, logger, @options[:timeout]
+      stream = Stream.new_link @options[:host], @options[:port], @options[:username], @options[:password], callback, logger, @options[:timeout]
       stream.async.run
       stream
     end

@@ -54,27 +54,10 @@ module RubyAMI
           subject.wrapped_object.stub(:actions_stream).and_return mock_actions_stream
         end
 
-        it 'should log in' do
-          mock_actions_stream.should_receive(:login).with 'username', 'password', 'On'
+        it 'should disable events' do
           mock_actions_stream.should_receive(:send_action).with 'Events', 'EventMask' => 'Off'
 
           subject.handle_message Stream::Connected.new
-        end
-      end
-
-      context 'when the events stream connects' do
-        let(:mock_events_stream) { mock 'Events Stream' }
-
-        before do
-          subject.wrapped_object.stub(:events_stream).and_return mock_events_stream
-        end
-
-        it 'should log in' do
-          mock_events_stream.should_receive(:login).with 'username', 'password', 'On'
-
-          subject.handle_event Stream::Connected.new
-
-          event_handler.should be_empty
         end
       end
     end
