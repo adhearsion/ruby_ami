@@ -3,12 +3,17 @@ module RubyAMI
   class Client
     include Celluloid
 
+    trap_exit :stream_died
+
     attr_reader :events_stream, :actions_stream
 
     def initialize(options)
       @options        = options
       @event_handler  = @options[:event_handler]
       @state          = :stopped
+      client          = current_actor
+      @events_stream  = new_stream ->(event) { client.async.handle_event event }
+      @actions_stream = new_stream ->(message) { client.async.handle_message message }
     end
 
     [:started, :stopped, :ready].each do |state|
@@ -16,9 +21,8 @@ module RubyAMI
     end
 
     def start
-      client          = current_actor
-      @events_stream  = new_stream ->(event) { client.async.handle_event event }
-      @actions_stream = new_stream ->(message) { client.async.handle_message message }
+      @events_stream.async.run
+      @actions_stream.async.run
       @state = :started
     end
 
@@ -32,7 +36,6 @@ module RubyAMI
       when Stream::Connected
         send_action 'Events', 'EventMask' => 'Off'
       when Stream::Disconnected
-        terminate
       when Event
         pass_event message
       end
@@ -41,9 +44,7 @@ module RubyAMI
     def handle_event(event)
       logger.trace "[RECV-EVENTS]: #{event.inspect}"
       case event
-      when Stream::Connected
-      when Stream::Disconnected
-        terminate
+      when Stream::Connected, Stream::Disconnected
       else
         pass_event event
       end
@@ -56,9 +57,11 @@ module RubyAMI
     end
 
     def new_stream(callback)
-      stream = Stream.new_link @options[:host], @options[:port], @options[:username], @options[:password], callback, logger, @options[:timeout]
-      stream.async.run
-      stream
+      Stream.new_link @options[:host], @options[:port], @options[:username], @options[:password], callback, logger, @options[:timeout]
+    end
+
+    def stream_died(stream, reason = nil)
+      terminate
     end
 
     def logger

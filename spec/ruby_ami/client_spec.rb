@@ -19,6 +19,9 @@ module RubyAMI
 
     it { should be_stopped }
 
+    its(:events_stream)   { should be_a Stream }
+    its(:actions_stream)  { should be_a Stream }
+
     it 'should return when the timeout option is specified and reached' do
       pending
       options[:timeout] = 2
@@ -41,9 +44,6 @@ module RubyAMI
       end
 
       it { should be_started }
-
-      its(:events_stream)   { should be_a Stream }
-      its(:actions_stream)  { should be_a Stream }
     end
 
     describe 'logging in streams' do
@@ -64,14 +64,14 @@ module RubyAMI
 
     describe 'when the events stream disconnects' do
       it 'should shut down the client' do
-        subject.handle_event Stream::Disconnected.new
+        subject.events_stream.terminate
         subject.should_not be_alive
       end
     end
 
     describe 'when the actions stream disconnects' do
       it 'should shut down the client' do
-        subject.handle_message Stream::Disconnected.new
+        subject.actions_stream.terminate
         subject.should_not be_alive
       end
     end
