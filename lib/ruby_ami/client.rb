@@ -17,8 +17,8 @@ module RubyAMI
 
     def start
       client          = current_actor
-      @events_stream  = new_stream lambda { |event| client.async.handle_event event }
-      @actions_stream = new_stream lambda { |message| client.async.handle_message message }
+      @events_stream  = new_stream ->(event) { client.async.handle_event event }
+      @actions_stream = new_stream ->(message) { client.async.handle_message message }
       @state = :started
     end
 
