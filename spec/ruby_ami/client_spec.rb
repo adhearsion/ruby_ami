@@ -36,7 +36,7 @@ module RubyAMI
         ms = MockServer.new
         ms.should_receive(:receive_data).at_least :once
         s = ServerMock.new options[:host], options[:port], ms
-        Thread.new { subject.start }
+        subject.async.start
         sleep 0.2
       end
 
