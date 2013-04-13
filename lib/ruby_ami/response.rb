@@ -3,8 +3,6 @@ module RubyAMI
   ##
   # This is the object containing a response from Asterisk.
   #
-  # Note: not all responses have an ActionID!
-  #
   class Response
     class << self
       def from_immediate_response(text)
