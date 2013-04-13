@@ -65,6 +65,7 @@ module RubyAMI
     describe 'when the events stream disconnects' do
       it 'should shut down the client' do
         subject.events_stream.terminate
+        sleep 0.2
         subject.should_not be_alive
       end
     end
@@ -72,6 +73,7 @@ module RubyAMI
     describe 'when the actions stream disconnects' do
       it 'should shut down the client' do
         subject.actions_stream.terminate
+        sleep 0.2
         subject.should_not be_alive
       end
     end
