@@ -10,31 +10,30 @@ NB: If you're looking to develop an application on Asterisk, you should take a l
 ```ruby
 require 'ruby_ami'
 
-include RubyAMI
-
-client = Client.new :username       => 'test',
-                    :password       => 'test',
-                    :host           => '127.0.0.1',
-                    :port           => 5038,
-                    :event_handler  => lambda { |e| handle_event e },
-                    :logger         => Logger.new(STDOUT),
-                    :log_level      => Logger::DEBUG,
-                    :timeout        => 10 
+client = RubyAMI::Client.new username: 'test',
+                        password:      'test',
+                        host:          '127.0.0.1',
+                        port:          5038,
+                        event_handler: ->(e) { handle_event e },
+                        logger:        Logger.new(STDOUT),
+                        log_level:     Logger::DEBUG,
+                        timeout:       10
 
 def handle_event(event)
   case event.name
   when 'FullyBooted'
-    client.send_action 'Originate', 'Channel' => 'SIP/foo'
+    client.async.send_action 'Originate', 'Channel' => 'SIP/foo'
   end
 end
 
 client.start
+
+Celluloid::Actor.join client
 ```
 
 ## Development Requirements
 
-ruby_ami uses [ragel](http://www.complang.org/ragel/) to generate some of it's
-files.
+ruby_ami uses [ragel](http://www.complang.org/ragel/) to generate some of it's files.
 
 On OS X (if you use homebrew):
 
