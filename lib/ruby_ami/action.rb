@@ -1,8 +1,6 @@
 module RubyAMI
   class Action
-    attr_reader :name, :headers, :action_id
-
-    attr_accessor :state
+    attr_reader :name, :headers, :action_id, :response
 
     CAUSAL_EVENT_NAMES = %w[queuestatus sippeers iaxpeers parkedcalls dahdishowchannels coreshowchannels
                             dbget status agents konferencelist confbridgelist confbridgelistrooms] unless defined? CAUSAL_EVENT_NAMES
@@ -11,19 +9,14 @@ module RubyAMI
       @name       = name.to_s.downcase.freeze
       @headers    = headers.freeze
       @action_id  = RubyAMI.new_uuid
-      @response   = FutureResource.new
-      @response_callback = block
-      @state      = :new
+      @response   = nil
+      @complete   = false
       @events     = []
-      @event_lock = Mutex.new
+      @callback   = block
     end
 
-    [:new, :sent, :complete].each do |state|
-      define_method("#{state}?") { @state == state }
-    end
-
-    def replies_with_action_id?
-      !UnsupportedActionName::UNSUPPORTED_ACTION_NAMES.include? name
+    def complete?
+      @complete
     end
 
     ##
@@ -71,46 +64,20 @@ module RubyAMI
       )
     end
 
-    #
-    # If the response has simply not been received yet from Asterisk, the calling Thread will block until it comes
-    # in. Once the response comes in, subsequent calls immediately return a reference to the ManagerInterfaceResponse
-    # object.
-    #
-    def response(timeout = nil)
-      @response.resource(timeout).tap do |resp|
-        raise resp if resp.is_a? Exception
-      end
-    end
-
-    def response=(other)
-      @state = :complete
-      @response.resource = other
-      @response_callback.call other if @response_callback
-    end
-
     def <<(message)
       case message
       when Error
         self.response = message
+        complete!
       when Event
         raise StandardError, 'This action should not trigger events. Maybe it is now a causal action? This is most likely a bug in RubyAMI' unless has_causal_events?
-        @event_lock.synchronize do
-          @events << message
-        end
-        self.response = @pending_response if message.name.downcase == causal_event_terminator_name
+        response.events << message
+        complete! if message.name.downcase == causal_event_terminator_name
       when Response
-        if has_causal_events?
-          @pending_response = message
-        else
-          self.response = message
-        end
+        self.response = message
+        complete! unless has_causal_events?
       end
-    end
-
-    def events
-      @event_lock.synchronize do
-        @events.dup
-      end
+      self
     end
 
     def eql?(other)
@@ -118,28 +85,15 @@ module RubyAMI
     end
     alias :== :eql?
 
-    def sync_timeout
-      name.downcase == 'originate' && !headers[:async] ? 60 : 10
+    private
+
+    def response=(other)
+      @response = other
     end
 
-    ##
-    # This class will be removed once this AMI library fully supports all known protocol anomalies.
-    #
-    class UnsupportedActionName < ArgumentError
-      UNSUPPORTED_ACTION_NAMES = %w[queues] unless defined? UNSUPPORTED_ACTION_NAMES
-
-      # Blacklist some actions depends on the Asterisk version
-      def self.preinitialize(version)
-        if version < 1.8
-          %w[iaxpeers muteaudio mixmonitormute aocmessage].each do |action|
-            UNSUPPORTED_ACTION_NAMES << action
-          end
-        end
-      end
-
-      def initialize(name)
-        super "At the moment this AMI library doesn't support the #{name.inspect} action because it causes a protocol anomaly. Support for it will be coming shortly."
-      end
+    def complete!
+      @complete = true
+      @callback.call response if @callback
     end
   end
 end # RubyAMI

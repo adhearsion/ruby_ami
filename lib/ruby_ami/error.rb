@@ -3,8 +3,8 @@ module RubyAMI
   class Error < StandardError
     attr_accessor :message, :action
 
-    def initialize
-      @headers = Hash.new
+    def initialize(headers = {})
+      @headers = headers
     end
 
     def [](key)

@@ -1,8 +1,4 @@
 %w{
-  future-resource
-  logger
-  girl_friday
-  countdownlatch
   celluloid/io
 }.each { |f| require f }
 
@@ -13,10 +9,6 @@ end
 module RubyAMI
   def self.new_uuid
     SecureRandom.uuid
-  end
-  
-  def self.rbx?
-    RbConfig::CONFIG['RUBY_INSTALL_NAME'] == 'rbx'
   end
 end
 
@@ -29,7 +21,6 @@ end
   error
   event
   lexer
-  metaprogramming
   response
   stream
   version

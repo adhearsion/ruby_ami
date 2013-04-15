@@ -7,32 +7,16 @@ module RubyAMI
     let(:headers) { {'foo' => 'bar'} }
 
     subject do
-      Action.new name, headers do |response|
-        @foo = response
+      described_class.new name, headers do |response|
+        @callback_result = response
       end
     end
 
-    it { should be_new }
+    it { should_not be_complete }
 
     describe "SIPPeers actions" do
       subject { Action.new('SIPPeers') }
       its(:has_causal_events?) { should be true }
-    end
-
-    describe "Queues actions" do
-      subject { Action.new('Queues') }
-      its(:replies_with_action_id?) { should == false }
-    end
-
-    describe "IAXPeers actions" do
-      before { pending }
-      # FIXME: This test relies on the side effect that earlier tests have run
-      # and initialized the UnsupportedActionName::UNSUPPORTED_ACTION_NAMES
-      # constant for an "unknown" version of Asterisk.  This should be fixed
-      # to be more specific about which version of Asterisk is under test.
-      # IAXPeers is supported (with Action IDs!) since Asterisk 1.8
-      subject { Action.new('IAXPeers') }
-      its(:replies_with_action_id?) { should == false }
     end
 
     describe "the ParkedCalls terminator event" do
@@ -52,34 +36,34 @@ module RubyAMI
       Action.new("ParkedCalls").to_s.should =~ /^Action: ParkedCalls\r\nActionID: [\w-]+\r\n\r\n$/i
     end
 
-    it 'should be able to be marked as sent' do
-      subject.state = :sent
-      subject.should be_sent
-    end
-
-    it 'should be able to be marked as complete' do
-      subject.state = :complete
-      subject.should be_complete
-    end
-
     describe '#<<' do
       describe 'for a non-causal action' do
         context 'with a response' do
           let(:response) { Response.new }
 
+          before { subject << response }
+
           it 'should set the response' do
-            subject << response
             subject.response.should be response
           end
+
+          it 'should call the callback' do
+            @callback_result.should be response
+          end
+
+          it { should be_complete }
         end
 
         context 'with an error' do
           let(:error) { Error.new.tap { |e| e.message = 'AMI error' } }
 
-          it 'should set the response and raise the error when reading it' do
-            subject << error
-            lambda { subject.response }.should raise_error Error, 'AMI error'
+          before { subject << error }
+
+          it 'should set the response' do
+            subject.response.should == error
           end
+
+          it { should be_complete }
         end
 
         context 'with an event' do
@@ -91,11 +75,10 @@ module RubyAMI
 
       describe 'for a causal action' do
         let(:name) { 'Status' }
+        let(:response) { Response.new }
 
         context 'with a response' do
-          let(:message) { Response.new }
-
-          before { subject << message }
+          before { subject << response }
 
           it { should_not be_complete }
         end
@@ -103,14 +86,15 @@ module RubyAMI
         context 'with an event' do
           let(:event) { Event.new 'foo' }
 
-          before { subject << event }
+          before { subject << response << event }
 
-          its(:events) { should == [event] }
+          it "should add the events to the response" do
+            subject.response.events.should == [event]
+          end
         end
 
         context 'with a terminating event' do
-          let(:response)  { Response.new }
-          let(:event)     { Event.new 'StatusComplete' }
+          let(:event) { Event.new 'StatusComplete' }
 
           before do
             subject << response
@@ -118,25 +102,14 @@ module RubyAMI
             subject << event
           end
 
-          its(:events) { should == [event] }
+          it "should add the events to the response" do
+            subject.response.events.should == [event]
+          end
 
           it { should be_complete }
 
           its(:response) { should be response }
         end
-      end
-    end
-
-    describe 'setting the response' do
-      let(:response) { :bar }
-
-      before { subject.response = response }
-
-      it { should be_complete }
-      its(:response) { should == response }
-
-      it 'should call the response callback with the response' do
-        @foo.should == response
       end
     end
 
@@ -159,30 +132,6 @@ module RubyAMI
       end
 
       it { should_not == :foo }
-    end
-
-    describe "#sync_timeout" do
-      it "should be 10 seconds" do
-        subject.sync_timeout.should be == 10
-      end
-
-      context "for an asynchronous Originate" do
-        let(:name) { 'Originate' }
-        let(:headers) { {:async => true} }
-
-        it "should be 60 seconds" do
-          subject.sync_timeout.should be == 10
-        end
-      end
-
-      context "for a synchronous Originate" do
-        let(:name) { 'Originate' }
-        let(:headers) { {:async => false} }
-
-        it "should be 60 seconds" do
-          subject.sync_timeout.should be == 60
-        end
-      end
     end
   end # Action
 end # RubyAMI

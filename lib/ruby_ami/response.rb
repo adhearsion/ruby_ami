@@ -3,8 +3,6 @@ module RubyAMI
   ##
   # This is the object containing a response from Asterisk.
   #
-  # Note: not all responses have an ActionID!
-  #
   class Response
     class << self
       def from_immediate_response(text)
@@ -14,12 +12,12 @@ module RubyAMI
       end
     end
 
-    attr_accessor :action,
-                  :text_body  # For "Response: Follows" sections
-    attr_reader   :events
+    attr_accessor :text_body, # For "Response: Follows" sections
+                  :events
 
-    def initialize
-      @headers = Hash.new
+    def initialize(headers = {})
+      @headers = headers
+      @events = []
     end
 
     def has_text_body?
@@ -47,7 +45,7 @@ module RubyAMI
     end
 
     def inspect_attributes
-      [:headers, :text_body, :events, :action]
+      [:headers, :text_body, :events]
     end
 
     def eql?(o, *fields)
