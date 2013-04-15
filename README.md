@@ -1,5 +1,5 @@
 # RubyAMI [![Build Status](https://secure.travis-ci.org/adhearsion/ruby_ami.png?branch=master)](http://travis-ci.org/adhearsion/ruby_ami)
-RubyAMI is an AMI client library in Ruby and based on EventMachine with the sole purpose of providing an connection to the Asterisk Manager Interface. RubyAMI does not provide any features beyond connection management and protocol parsing. Actions are sent over the wire, and responses come back via callbacks. It's up to you to match these up into something useful. In this regard, RubyAMI is very similar to [Blather](https://github.com/sprsquish/blather) for XMPP or [Punchblock](https://github.com/adhearsion/punchblock), the Ruby 3PCC library. In fact, Punchblock uses RubyAMI under the covers for its Asterisk implementation, including an implementation of AsyncAGI.
+RubyAMI is an AMI client library in Ruby and based on EventMachine with the sole purpose of providing a connection to the Asterisk Manager Interface. RubyAMI does not provide any features beyond connection management and protocol parsing. Actions are sent over the wire, and responses are returned. Events are passed to a callback you define. It's up to you to match these up into something useful. In this regard, RubyAMI is very similar to [Blather](https://github.com/sprsquish/blather) for XMPP or [Punchblock](https://github.com/adhearsion/punchblock), the Ruby 3PCC library. In fact, Punchblock uses RubyAMI under the covers for its Asterisk implementation, including an implementation of AsyncAGI.
 
 NB: If you're looking to develop an application on Asterisk, you should take a look at the [Adhearsion](http://adhearsion.com) framework first. This library is much lower level.
 
@@ -63,4 +63,4 @@ Once you are inside the repository, before anything else, you will want to run:
 
 ## Copyright
 
-Copyright (c) 2011 Ben Langfeld, Jay Phillips. MIT licence (see LICENSE for details).
+Copyright (c) 2013 Ben Langfeld, Jay Phillips. MIT licence (see LICENSE for details).
