@@ -1,5 +1,11 @@
 # [develop](https://github.com/adhearsion/ruby_ami)
 
+# [2.0.0](https://github.com/adhearsion/ruby_ami/compare/v1.3.3...v2.0.0) - [2013-04-15](https://rubygems.org/gems/ruby_ami/versions/2.0.0)
+  * Major refactoring for simplification and performance
+  * Actions are no longer synchronised on the wire since ActionID is now a reliable method of response/event association
+  * Callbacks are no longer required. #send_action now simply blocks waiting for a response
+  * Client still starts up two Streams, one for actions and one for events, but only for possible performance gains. It is possible to use Stream directly since it now does its own login and response association. Client is a very thin routing layer. It's encouraged that if you expect low traffic, you should use Stream directly. Client may be removed in v3.0.
+
 # [1.3.3](https://github.com/adhearsion/ruby_ami/compare/v1.3.2...v1.3.3) - [2013-04-09](https://rubygems.org/gems/ruby_ami/versions/1.3.3)
   * Bugfix: DBGet actions are now not terminated specially
 
