@@ -48,5 +48,14 @@ module RubyAMI
       its(:data)      { should == 'foo=bar' }
       its(:data_hash) { should == {'foo' => 'bar'} }
     end
+
+    context 'with a 5xx error' do
+      let(:result_string) { "510%20Invalid%20or%20unknown%20command%0A" }
+
+      its(:code)      { should == 510 }
+      its(:result)    { should be_nil }
+      its(:data)      { should == 'Invalid or unknown command' }
+      its(:data_hash) { should be_nil }
+    end
   end
 end
