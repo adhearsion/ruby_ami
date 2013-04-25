@@ -5,6 +5,9 @@ rvm:
   - 2.0.0
   - jruby-19mode
   - rbx-19mode
-  - ruby-head
+  - ruby-head  
+matrix:
+  allow_failures:
+    - rvm: jruby-19mode
 notifications:
   irc: "irc.freenode.org#adhearsion"
