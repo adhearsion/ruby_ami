@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
   s.email       = ["ben@langfeld.me"]
   s.homepage    = ""
   s.summary     = %q{Futzing with AMI so you don't have to}
-  s.description = %q{A Ruby client library for the Asterisk Management Interface build on eventmachine.}
+  s.description = %q{A Ruby client library for the Asterisk Management Interface built on Celluloid IO.}
 
   s.rubyforge_project = "ruby_ami"
 
