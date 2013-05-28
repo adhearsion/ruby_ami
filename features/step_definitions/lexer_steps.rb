@@ -124,7 +124,7 @@ When 'the custom event identified by "$identifier" is added to the buffer' do |i
 end
 
 When "the buffer is lexed" do
-  @lexer.resume!
+  @lexer.parse_buffer
 end
 
 ########################################
