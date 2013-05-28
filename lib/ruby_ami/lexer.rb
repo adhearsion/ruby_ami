@@ -13,7 +13,7 @@ module RubyAMI
       rest_of_line: /(.*)?\r\n/, #UNUSED?
       prompt: /Asterisk Call Manager\/(\d+\.\d+)\r\n/,
       key: /([[[:alnum:]][[:print:]]])[\r\n:]+/, #UNUSED?
-      keyvaluepair: /([[[:alnum:]][[:print:]]]+): *(.*)\r\n/,
+      keyvaluepair: /^([[:alnum:]]+): *(.*)\r\n/,
       followsdelimiter: /\r?\n--END COMMAND--/,
       response: /response: */i, #UNUSED?
       success: /response: *success\r\n/i,
@@ -50,6 +50,7 @@ module RubyAMI
 
       @data.scan(/(.*)?#{TOKENS[:stanza_break]}/m).each do |raw|
         raw = raw.first
+        response_follows = false
         msg = case raw
         when TOKENS[:prompt]
           @ami_version = $1
@@ -63,20 +64,25 @@ module RubyAMI
           Error.new
         when TOKENS[:pong]
           Pong.new
+        when TOKENS[:follows]
+          response_follows = true
+          Response.new
         end
 
-        # Remove the line just processed
-        processed << raw.slice!(/.*\r\n/)
+        # Mark this message as processed
+        processed << raw
 
+        # Strip off the header line
+        raw.slice!(/.*\r\n/)
         # Terminate the last line of the message since the newline was lost with the stanza break
         raw << "\r\n"
         populate_message_body msg, raw
 
-        processed << raw
+        handle_response_follows(msg, raw) if response_follows
 
         message_received msg
       end
-      @data.slice! 0, processed.length + 2 # remove 2 extra bytes of \r\n
+      @data.slice! 0, processed.length + 4 # remove 4 extra bytes of \r\n\r\n
     end
 
     def extend_buffer_with(new_data)
@@ -105,10 +111,17 @@ module RubyAMI
     end
 
     def populate_message_body(obj, raw)
-      raw.scan(TOKENS[:keyvaluepair]).each do |key, value|
-        obj[key] = value
+      while raw.slice! TOKENS[:keyvaluepair]
+        obj[$1] = $2
       end
       obj
+    end
+
+    def handle_response_follows(obj, raw)
+      puts "RAW: #{raw.inspect}"
+      if raw =~ TOKENS[:followsbody]
+        obj.text_body = $1.chomp
+      end
     end
   end
 end
