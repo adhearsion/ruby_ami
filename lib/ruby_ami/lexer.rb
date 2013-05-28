@@ -121,7 +121,6 @@ module RubyAMI
     end
 
     def handle_response_follows(obj, raw)
-      puts "RAW: #{raw.inspect}"
       if raw =~ TOKENS[:followsbody]
         obj.text_body = $1.chomp
       end
