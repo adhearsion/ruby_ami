@@ -29,13 +29,7 @@ module RubyAMI
     def initialize(delegate = nil)
       @delegate = delegate
       @data = ""
-      @current_pointer = 0
       @ami_version = 0.0
-
-	    @current_pointer ||= 0
-	    @data_ending_pointer ||=   @data.length
-	    @token_start = nil
-	    @token_end = nil
     end
 
     def <<(new_data)
