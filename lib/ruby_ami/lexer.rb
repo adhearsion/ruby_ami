@@ -107,6 +107,15 @@ module RubyAMI
     end
 
     ##
+    # Called after an AMI error has been successfully parsed.
+    #
+    # @param [Response, Event] message The message just received
+    #
+    def error_received(message)
+      @delegate.error_received message
+    end
+
+    ##
     # Called when there's a syntax error on the socket. This doesn't happen as often as it should because, in many cases,
     # it's impossible to distinguish between a syntax error and an immediate packet.
     #
