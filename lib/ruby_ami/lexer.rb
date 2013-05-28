@@ -13,7 +13,7 @@ module RubyAMI
       rest_of_line: /(.*)?\r\n/, #UNUSED?
       prompt: /Asterisk Call Manager\/(\d+\.\d+)\r\n/,
       key: /([[[:alnum:]][[:print:]]])[\r\n:]+/, #UNUSED?
-      keyvaluepair: /^([[:alnum:]]+): *(.*)\r\n/,
+      keyvaluepair: /^([[[:alnum:]]-_ ]+): *(.*)\r\n/,
       followsdelimiter: /\r?\n--END COMMAND--/,
       response: /response: */i, #UNUSED?
       success: /response: *success\r\n/i,
