@@ -44,6 +44,13 @@ module RubyAMI
     end
 
     def parse_buffer
+      # Special case for the protocol header
+      if @data =~ TOKENS[:prompt]
+        @ami_version = $1
+        @data.slice!(/.*\r\n/)
+      end
+
+      # We need at least one complete message before parsing
       return unless @data =~ TOKENS[:stanza_break]
 
       processed = ''
@@ -64,10 +71,6 @@ module RubyAMI
           Response.new
         when TOKENS[:error]
           Error.new
-        when TOKENS[:prompt]
-          @ami_version = $1
-          processed << raw.slice!(/.*\r\n/)
-          Response.new
         end
 
         # Mark this message as processed, including the 4 stripped cr/lf bytes
