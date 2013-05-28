@@ -73,8 +73,8 @@ module RubyAMI
           Response.new
         end
 
-        # Mark this message as processed
-        processed << raw
+        # Mark this message as processed, including the 4 stripped cr/lf bytes
+        processed << raw + "\r\n\r\n"
 
         # Strip off the header line
         raw.slice!(/.*\r\n/)
@@ -86,7 +86,7 @@ module RubyAMI
 
         message_received msg
       end
-      @data.slice! 0, processed.length + 4 # remove 4 extra bytes of \r\n\r\n
+      @data.slice! 0, processed.length
     end
 
     def extend_buffer_with(new_data)
