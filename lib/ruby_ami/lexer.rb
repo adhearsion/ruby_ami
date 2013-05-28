@@ -55,10 +55,6 @@ module RubyAMI
           # Ignore blank lines
           processed << raw
           next
-        when TOKENS[:prompt]
-          @ami_version = $1
-          processed << raw
-          next
         when TOKENS[:event]
           Event.new $1
         when TOKENS[:success], TOKENS[:pong]
@@ -68,6 +64,10 @@ module RubyAMI
           Response.new
         when TOKENS[:error]
           Error.new
+        when TOKENS[:prompt]
+          @ami_version = $1
+          processed << raw
+          next
         end
 
         # Mark this message as processed, including the 4 stripped cr/lf bytes
