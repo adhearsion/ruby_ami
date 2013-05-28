@@ -21,7 +21,7 @@ module RubyAMI
       event: /event: *(.*)?\r\n/i,
       error: /response: *error\r\n/i,
       follows: /response: *follows\r\n/i,
-      followsbody: /(.*)?\r?\n--END COMMAND--/
+      followsbody: /(.*)?\r?\n--END COMMAND--\r\n\r\n/m
     }
     
     attr_accessor :ami_version
