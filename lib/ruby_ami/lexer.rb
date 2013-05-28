@@ -91,7 +91,6 @@ module RubyAMI
 
     def extend_buffer_with(new_data)
       @data << new_data
-      @data_ending_pointer = @data.size
     end
 
     protected
