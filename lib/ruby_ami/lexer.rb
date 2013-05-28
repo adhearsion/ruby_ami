@@ -29,6 +29,27 @@ module RubyAMI
     ]
 
 
+    TOKENS = {
+      cr: /\r/,
+      lf: /\n/,
+      crlf: /\r\n/,
+      loose_newline: /\r?\n/,
+      white: /[\t ]/,
+      colon: /: */,
+      stanza_break: /\r\n\r\n/,
+      rest_of_line: /.*\r\n/,
+      prompt: /Asterisk Call Manager\/(\d+\.\d+)\r\n/,
+      key: /([[[:alnum:]][[:print:]]])[\r\n:]+/,
+      keyvaluepair: /([[[:alnum:]][[:print:]]]+): *(.*)\r\n/,
+      followsdelimiter: /\r?\n--END COMMAND--/,
+      response: /response: */i,
+      success: /response: *success\r\n/i,
+      pong: /response: *pong\r\n/i,
+      event: /event: *(.*)\r\n/i,
+      error: /response: *error\r\n/i,
+      follows: /response: *follows\r\n/i,
+      followsbody: /(.*)?\r?\n--END COMMAND--/
+    }
     
     attr_accessor :ami_version
 
@@ -50,33 +71,10 @@ module RubyAMI
     end
 
     def parse_buffer
-      tokens = {
-        cr: /\r/,
-        lf: /\n/,
-        crlf: /\r\n/,
-        loose_newline: /\r?\n/,
-        white: /[\t ]/,
-        colon: /: */,
-        stanza_break: /\r\n\r\n/,
-        rest_of_line: /.*\r\n/,
-        prompt: /Asterisk Call Manager\/(\d+\.\d+)\r\n/,
-        key: /([[[:alnum:]][[:print:]]])[\r\n:]+/,
-        keyvaluepair: /([[[:alnum:]][[:print:]]]+): *(.*)\r\n/,
-        followsdelimiter: /\r?\n--END COMMAND--/,
-        response: /response: */i,
-        success: /response: *success\r\n/i,
-        pong: /response: *pong\r\n/i,
-        event: /event: *(.*)\r\n/i,
-        error: /response: *error\r\n/i,
-        follows: /response: *follows\r\n/i,
-        followsbody: /(.*)?\r?\n--END COMMAND--/,
 
-        
-      }
+      return unless @data =~ TOKENS[:stanza_break]
 
-      return unless @data =~ tokens[:stanza_break]
-
-      @data.scan(/.*#{tokens[:stanza_break]}/).each do |msg|
+      @data.scan(/.*#{TOKENS[:stanza_break]}/).each do |msg|
 
 
     end
