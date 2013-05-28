@@ -48,13 +48,12 @@ module RubyAMI
 
       processed = ''
 
-      @data.scan(/(.*?)#{TOKENS[:stanza_break]}/m).each do |raw|
-        raw = raw.first
+      @data.scan(/.*?#{TOKENS[:stanza_break]}/m).each do |raw|
         response_follows = false
         msg = case raw
         when ''
           # Ignore blank lines
-          processed << "\r\n\r\n"
+          processed << raw
           next
         when TOKENS[:prompt]
           @ami_version = $1
@@ -74,12 +73,10 @@ module RubyAMI
         end
 
         # Mark this message as processed, including the 4 stripped cr/lf bytes
-        processed << raw + "\r\n\r\n"
+        processed << raw
 
         # Strip off the header line
         raw.slice!(/.*\r\n/)
-        # Terminate the last line of the message since the newline was lost with the stanza break
-        raw << "\r\n"
         populate_message_body msg, raw
 
         handle_response_follows(msg, raw) if response_follows
