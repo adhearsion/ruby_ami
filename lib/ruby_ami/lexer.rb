@@ -66,8 +66,8 @@ module RubyAMI
           Error.new
         when TOKENS[:prompt]
           @ami_version = $1
-          processed << raw
-          next
+          processed << raw.slice!(/.*\r\n/)
+          Response.new
         end
 
         # Mark this message as processed, including the 4 stripped cr/lf bytes
