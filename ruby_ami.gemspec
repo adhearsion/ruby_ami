@@ -5,8 +5,8 @@ require "ruby_ami/version"
 Gem::Specification.new do |s|
   s.name        = "ruby_ami"
   s.version     = RubyAMI::VERSION
-  s.authors     = ["Ben Langfeld"]
-  s.email       = ["ben@langfeld.me"]
+  s.authors     = ["Ben Langfeld", "Ben Klang"]
+  s.email       = ["ben@langfeld.me", "bklang@mojolingo.com"]
   s.homepage    = ""
   s.summary     = %q{Futzing with AMI so you don't have to}
   s.description = %q{A Ruby client library for the Asterisk Management Interface built on Celluloid IO.}
