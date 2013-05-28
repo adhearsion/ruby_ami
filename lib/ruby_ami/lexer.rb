@@ -74,7 +74,7 @@ module RubyAMI
 
         processed << raw
 
-        @delegate.message_received msg
+        message_received msg
       end
       @data.slice! 0, processed.length + 2 # remove 2 extra bytes of \r\n
     end
