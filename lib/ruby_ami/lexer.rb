@@ -82,7 +82,11 @@ module RubyAMI
 
         handle_response_follows(msg, raw) if response_follows
 
-        message_received msg
+        if msg.class == Error
+          error_received msg
+        else
+          message_received msg
+        end
       end
       @data.slice! 0, processed.length
     end
