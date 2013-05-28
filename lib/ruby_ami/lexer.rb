@@ -48,7 +48,7 @@ module RubyAMI
 
       processed = ''
 
-      @data.scan(/(.*)?#{TOKENS[:stanza_break]}/m).each do |raw|
+      @data.scan(/(.*?)#{TOKENS[:stanza_break]}/m).each do |raw|
         raw = raw.first
         response_follows = false
         msg = case raw
