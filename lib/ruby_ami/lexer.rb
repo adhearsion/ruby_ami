@@ -61,15 +61,13 @@ module RubyAMI
           next
         when TOKENS[:event]
           Event.new $1
-        when TOKENS[:success]
+        when TOKENS[:success], TOKENS[:pong]
           Response.new
-        when TOKENS[:error]
-          Error.new
-        when TOKENS[:pong]
-          Pong.new
         when TOKENS[:follows]
           response_follows = true
           Response.new
+        when TOKENS[:error]
+          Error.new
         end
 
         # Mark this message as processed, including the 4 stripped cr/lf bytes
