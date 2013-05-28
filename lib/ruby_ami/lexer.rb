@@ -52,6 +52,10 @@ module RubyAMI
         raw = raw.first
         response_follows = false
         msg = case raw
+        when ''
+          # Ignore blank lines
+          processed << "\r\n\r\n"
+          next
         when TOKENS[:prompt]
           @ami_version = $1
           processed << raw
