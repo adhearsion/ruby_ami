@@ -98,6 +98,26 @@ Message: Recording started
         end
       end
 
+      it "can process an action with a Response: Follows result" do
+        mocked_server(1, lambda { @stream.send_action('Command', 'Command' => 'dialplan add extension 1,1,AGI,agi:async into adhearsion-redirect') }) do |val, server|
+          val.should == <<-ACTION
+Action: command\r
+ActionID: #{RubyAMI.new_uuid}\r
+Command: dialplan add extension 1,1,AGI,agi:async into adhearsion-redirect\r
+\r
+        ACTION
+
+        server.send_data <<-EVENT
+Response: Follows
+Privilege: Command
+ActionID: #{RubyAMI.new_uuid}
+Extension '1,1,AGI(agi:async)' added into 'adhearsion-redirect' context
+--END COMMAND--
+
+          EVENT
+        end
+      end
+
       context "with a username and password set" do
         let(:username) { 'fred' }
         let(:password) { 'jones' }
