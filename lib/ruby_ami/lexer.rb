@@ -30,22 +30,22 @@ module RubyAMI
 
 
     TOKENS = {
-      cr: /\r/,
-      lf: /\n/,
-      crlf: /\r\n/,
-      loose_newline: /\r?\n/,
-      white: /[\t ]/,
-      colon: /: */,
+      cr: /\r/, #UNUSED?
+      lf: /\n/, #UNUSED?
+      crlf: /\r\n/, #UNUSED?
+      loose_newline: /\r?\n/, #UNUSED?
+      white: /[\t ]/, #UNUSED?
+      colon: /: */, #UNUSED?
       stanza_break: /\r\n\r\n/,
-      rest_of_line: /.*\r\n/,
+      rest_of_line: /(.*)?\r\n/, #UNUSED?
       prompt: /Asterisk Call Manager\/(\d+\.\d+)\r\n/,
-      key: /([[[:alnum:]][[:print:]]])[\r\n:]+/,
+      key: /([[[:alnum:]][[:print:]]])[\r\n:]+/, #UNUSED?
       keyvaluepair: /([[[:alnum:]][[:print:]]]+): *(.*)\r\n/,
       followsdelimiter: /\r?\n--END COMMAND--/,
-      response: /response: */i,
+      response: /response: */i, #UNUSED?
       success: /response: *success\r\n/i,
       pong: /response: *pong\r\n/i,
-      event: /event: *(.*)\r\n/i,
+      event: /event: *(.*)?\r\n/i,
       error: /response: *error\r\n/i,
       follows: /response: *follows\r\n/i,
       followsbody: /(.*)?\r?\n--END COMMAND--/
@@ -71,12 +71,39 @@ module RubyAMI
     end
 
     def parse_buffer
-
       return unless @data =~ TOKENS[:stanza_break]
 
-      @data.scan(/.*#{TOKENS[:stanza_break]}/).each do |msg|
+      processed = ''
 
+      @data.scan(/(.*)?#{TOKENS[:stanza_break]}/m).each do |raw|
+        raw = raw.first
+        msg = case raw
+        when TOKENS[:prompt]
+          @ami_version = $1
+          processed << raw
+          next
+        when TOKENS[:event]
+          Event.new $1
+        when TOKENS[:success]
+          Response.new
+        when TOKENS[:error]
+          Error.new
+        when TOKENS[:pong]
+          Pong.new
+        end
 
+        # Remove the line just processed
+        processed << raw.slice!(/.*\r\n/)
+
+        # Terminate the last line of the message since the newline was lost with the stanza break
+        raw << "\r\n"
+        populate_message_body msg, raw
+
+        processed << raw
+
+        @delegate.message_received msg
+      end
+      @data.slice! 0, processed.length + 2 # remove 2 extra bytes of \r\n
     end
 
     def extend_buffer_with(new_data)
@@ -155,53 +182,11 @@ module RubyAMI
       @delegate.syntax_error_encountered ignored_chunk
     end
 
-    def init_success
-      @current_message = Response.new
-    end
-
-    def init_response_follows
-      @current_message = Response.new
-    end
-
-    def init_error
-      @current_message = Error.new
-    end
-
-    def version_starts
-      @version_start = @current_pointer
-    end
-
-    def version_stops
-      self.ami_version = @data[@version_start...@current_pointer].to_f
-      @version_start = nil
-    end
-
-    def event_name_starts
-      @event_name_start = @current_pointer
-    end
-
-    def event_name_stops
-      event_name = @data[@event_name_start...@current_pointer]
-      @event_name_start = nil
-      @current_message = Event.new(event_name)
-    end
-
-    def key_starts
-      @current_key_position = @current_pointer
-    end
-
-    def key_stops
-      @current_key = @data[@current_key_position...@current_pointer]
-    end
-
-    def value_starts
-      @current_value_position = @current_pointer
-    end
-
-    def value_stops
-      @current_value = @data[@current_value_position...@current_pointer]
-      @last_seen_value_end = @current_pointer + 2 # 2 for \r\n
-      add_pair_to_current_message
+    def populate_message_body(obj, raw)
+      raw.scan(TOKENS[:keyvaluepair]).each do |key, value|
+        obj[key] = value
+      end
+      obj
     end
 
     def error_reason_starts

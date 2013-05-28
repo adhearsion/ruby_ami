@@ -12,6 +12,7 @@ module RubyAMI
     end
 
     def []=(key,value)
+      self.message = value if key == 'Message'
       @headers[key] = value
     end
 
