@@ -2,28 +2,26 @@
 
 module RubyAMI
   class Lexer
-    TOKENS = {
-      cr: /\r/, #UNUSED?
-      lf: /\n/, #UNUSED?
-      crlf: /\r\n/, #UNUSED?
-      loose_newline: /\r?\n/, #UNUSED?
-      white: /[\t ]/, #UNUSED?
-      colon: /: */, #UNUSED?
-      stanza_break: /\r\n\r\n/,
-      rest_of_line: /(.*)?\r\n/, #UNUSED?
-      prompt: /Asterisk Call Manager\/(\d+\.\d+)\r\n/,
-      key: /([[[:alnum:]][[:print:]]])[\r\n:]+/, #UNUSED?
-      keyvaluepair: /^([[[:alnum:]]-_ ]+): *(.*)\r\n/,
-      followsdelimiter: /\r?\n?--END COMMAND--\r\n\r\n/,
-      response: /response: */i, #UNUSED?
-      success: /response: *success\r\n/i,
-      pong: /response: *pong\r\n/i,
-      event: /event: *(.*)?\r\n/i,
-      error: /response: *error\r\n/i,
-      follows: /response: *follows\r\n/i,
-      followsbody: /(.*)?\r?\n?(?:--END COMMAND--\r\n\r\n|\r\n\r\n\r\n)/m
-    }
-    
+    CR                = /\r/, #UNUSED?
+    LF                = /\n/, #UNUSED?
+    CRLF              = /\r\n/, #UNUSED?
+    LOOSE_NEWLINE     = /\r?\n/, #UNUSED?
+    WHITE             = /[\t ]/, #UNUSED?
+    COLON             = /: */, #UNUSED?
+    STANZA_BREAK      = /\r\n\r\n/,
+    REST_OF_LINE      = /(.*)?\r\n/, #UNUSED?
+    PROMPT            = /Asterisk Call Manager\/(\d+\.\d+)\r\n/,
+    KEY               = /([[[:alnum:]][[:print:]]])[\r\n:]+/, #UNUSED?
+    KEYVALUEPAIR      = /^([[[:alnum:]]-_ ]+): *(.*)\r\n/,
+    FOLLOWSDELIMITER  = /\r?\n?--END COMMAND--\r\n\r\n/,
+    RESPONSE          = /response: */i, #UNUSED?
+    SUCCESS           = /response: *success\r\n/i,
+    PONG              = /response: *pong\r\n/i,
+    EVENT             = /event: *(.*)?\r\n/i,
+    ERROR             = /response: *error\r\n/i,
+    FOLLOWS           = /response: *follows\r\n/i,
+    FOLLOWSBODY       = /(.*)?\r?\n?(?:--END COMMAND--\r\n\r\n|\r\n\r\n\r\n)/m
+
     attr_accessor :ami_version
 
     def initialize(delegate = nil)
@@ -39,19 +37,19 @@ module RubyAMI
 
     def parse_buffer
       # Special case for the protocol header
-      if @data =~ TOKENS[:prompt]
+      if @data =~ PROMPT
         @ami_version = $1
         @data.slice!(/.*\r\n/)
       end
 
       # We need at least one complete message before parsing
-      return unless @data =~ TOKENS[:stanza_break]
+      return unless @data =~ STANZA_BREAK
 
       @processed = ''
 
       response_follows_message = false
       current_message = nil
-      @data.scan(/.*?#{TOKENS[:stanza_break]}/m).each do |raw|
+      @data.scan(/.*?#{STANZA_BREAK}/m).each do |raw|
         if response_follows_message
           if handle_response_follows response_follows_message, raw
             @processed << raw
@@ -78,14 +76,14 @@ module RubyAMI
         # Ignore blank lines
         @processed << raw
         return
-      when TOKENS[:event]
+      when EVENT
         Event.new $1
-      when TOKENS[:success], TOKENS[:pong]
+      when SUCCESS, PONG
         Response.new
-      when TOKENS[:follows]
+      when FOLLOWS
         response_follows = true
         Response.new
-      when TOKENS[:error]
+      when ERROR
         Error.new
       end
 
@@ -138,7 +136,7 @@ module RubyAMI
     end
 
     def populate_message_body(obj, raw)
-      while raw.slice! TOKENS[:keyvaluepair]
+      while raw.slice! KEYVALUEPAIR
         obj[$1] = $2
       end
       obj
@@ -147,8 +145,8 @@ module RubyAMI
     def handle_response_follows(obj, raw)
       obj.text_body ||= ''
       obj.text_body << raw
-      if raw =~ TOKENS[:followsdelimiter]
-        obj.text_body.sub! TOKENS[:followsdelimiter], ''
+      if raw =~ FOLLOWSDELIMITER
+        obj.text_body.sub! FOLLOWSDELIMITER, ''
         obj.text_body.chomp!
         return true
       end
