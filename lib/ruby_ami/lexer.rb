@@ -69,10 +69,10 @@ module RubyAMI
     end
 
     def parse_message(raw)
+      return if raw.length == 0
+
       # Mark this message as processed, including the 4 stripped cr/lf bytes
       @processed += raw.length
-
-      return if raw == ''
 
       match = raw.match CLASSIFIER
 
