@@ -33,7 +33,7 @@ module RubyAMI
     end
 
     def <<(new_data)
-      extend_buffer_with new_data
+      @data << new_data
       parse_buffer
     end
 
@@ -41,7 +41,7 @@ module RubyAMI
       # Special case for the protocol header
       if @data =~ PROMPT
         @ami_version = $1
-        @data.slice!(HEADER_SLICE)
+        @data.slice! HEADER_SLICE
       end
 
       # We need at least one complete message before parsing
@@ -53,7 +53,7 @@ module RubyAMI
       current_message = nil
       @data.scan(SCANNER).each do |raw|
         if response_follows_message
-          if handle_response_follows response_follows_message, raw
+          if handle_response_follows(response_follows_message, raw)
             @processed << raw
             message_received response_follows_message
             response_follows_message = nil
@@ -66,17 +66,14 @@ module RubyAMI
       @processed = ''
     end
 
-    def extend_buffer_with(new_data)
-      @data << new_data
-    end
-
     protected
 
     def parse_message(raw)
+      # Mark this message as processed, including the 4 stripped cr/lf bytes
+      @processed << raw
+
       msg = case raw
-      when ''
-        # Ignore blank lines
-        @processed << raw
+      when '' # Ignore blank lines
         return
       when EVENT
         Event.new $1
@@ -89,24 +86,19 @@ module RubyAMI
         Error.new
       end
 
-      # Mark this message as processed, including the 4 stripped cr/lf bytes
-      @processed << raw
-
       # Strip off the header line
-      raw.slice!(HEADER_SLICE)
+      raw.slice! HEADER_SLICE
       populate_message_body msg, raw
 
-      if response_follows
-        unless handle_response_follows(msg, raw)
-          return msg
-        end
-      end
+      return msg if response_follows && !handle_response_follows(msg, raw)
 
-      if msg.class == Error
+      case msg
+      when Error
         error_received msg
       else
         message_received msg
       end
+
       nil
     end
 
@@ -147,12 +139,10 @@ module RubyAMI
     def handle_response_follows(obj, raw)
       obj.text_body ||= ''
       obj.text_body << raw
-      if raw =~ FOLLOWSDELIMITER
-        obj.text_body.sub! FOLLOWSDELIMITER, ''
-        obj.text_body.chomp!
-        return true
-      end
-      false
+      return false unless raw =~ FOLLOWSDELIMITER
+      obj.text_body.sub! FOLLOWSDELIMITER, ''
+      obj.text_body.chomp!
+      true
     end
   end
 end
