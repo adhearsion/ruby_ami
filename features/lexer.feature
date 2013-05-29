@@ -7,8 +7,6 @@ Feature: Lexing AMI
     Given a new lexer
     And a version header for AMI 1.0
 
-    When the buffer is lexed
-
     Then the protocol should have lexed without syntax errors
     And the version should be set to 1.0
 
@@ -16,8 +14,6 @@ Feature: Lexing AMI
     Given a new lexer
     And a version header for AMI 1.0
     And a normal login success with events
-
-    When the buffer is lexed
 
     Then the protocol should have lexed without syntax errors
     And 1 message should have been received
@@ -27,8 +23,6 @@ Feature: Lexing AMI
 #    And a version header for AMI 1.0
 #    And a multi-line Response:Follows body of ragel_description
 #
-#    When the buffer is lexed
-#
 #    Then the protocol should have lexed without syntax errors
 #    And the 'follows' body of 1 message received should equal ragel_description
 
@@ -36,8 +30,6 @@ Feature: Lexing AMI
     Given a new lexer
     And a version header for AMI 1.0
     And a multi-line Response:Follows body of empty_String
-
-    When the buffer is lexed
 
     Then the protocol should have lexed without syntax errors
     And the 'follows' body of 1 message received should equal empty_string
@@ -47,8 +39,6 @@ Feature: Lexing AMI
     And a version header for AMI 1.0
     Given a multi-line Response:Follows body of show_channels_from_wayne
 
-    When the buffer is lexed
-
     Then the protocol should have lexed without syntax errors
     And the 'follows' body of 1 message received should equal show_channels_from_wayne
 
@@ -57,16 +47,12 @@ Feature: Lexing AMI
     And a version header for AMI 1.0
     Given a multi-line Response:Follows response simulating uptime
 
-    When the buffer is lexed
-
     Then the protocol should have lexed without syntax errors
     And the first message received should have a key "System uptime" with value "46 minutes, 30 seconds"
 
   Scenario: Lexing a Response:Follows section which has a colon not on the first line
     Given a new lexer
     And a multi-line Response:Follows body of with_colon_after_first_line
-
-    When the buffer is lexed
 
     Then the protocol should have lexed without syntax errors
     And 1 message should have been received
@@ -77,8 +63,6 @@ Feature: Lexing AMI
     Given a new lexer
     And an immediate response with text "markq        has 0 calls (max unlimited) in 'ringall' strategy (0s holdtime), W:0, C:0, A:0, SL:0.0% within 0s\r\n   No Members\r\n   No Callers\r\n\r\n\r\n\r\n"
 
-    When the buffer is lexed
-
     Then the protocol should have lexed without syntax errors
     And 1 message should have been received
     And 1 message should be an immediate response with text "markq        has 0 calls (max unlimited) in 'ringall' strategy (0s holdtime), W:0, C:0, A:0, SL:0.0% within 0s\r\n   No Members\r\n   No Callers"
@@ -88,8 +72,6 @@ Feature: Lexing AMI
     And a version header for AMI 1.0
     And an Authentication Required error
 
-    When the buffer is lexed
-
     Then the protocol should have lexed without syntax errors
 
 #  Scenario: Lexing the initial AMI header and then a Response:Follows section
@@ -98,8 +80,6 @@ Feature: Lexing AMI
 #    And a multi-line Response:Follows body of ragel_description
 #    And a multi-line Response:Follows body of ragel_description
 #
-#    When the buffer is lexed
-#
 #    Then the protocol should have lexed without syntax errors
 #    And the 'follows' body of 2 messages received should equal ragel_description
 
@@ -107,16 +87,12 @@ Feature: Lexing AMI
     Given a new lexer
     And a normal login success with events
 
-    When the buffer is lexed
-
     Then the protocol should have lexed without syntax errors
     And 1 message should have been received
 
   Scenario: Receiving an immediate response as soon as the socket is opened
     Given a new lexer
     And an immediate response with text "Immediate responses are so ridiculous"
-
-    When the buffer is lexed
 
     Then the protocol should have lexed without syntax errors
     And 1 message should have been received
@@ -128,8 +104,6 @@ Feature: Lexing AMI
     And an immediate response with text "No queues have been created."
     And a normal login success with events
 
-    When the buffer is lexed
-
     Then the protocol should have lexed without syntax errors
     And 3 messages should have been received
     And 1 message should be an immediate response with text "No queues have been created."
@@ -140,8 +114,6 @@ Feature: Lexing AMI
     And a normal login success with events
     And a Pong response with an ActionID of randomness
 
-    When the buffer is lexed
-
     Then the protocol should have lexed without syntax errors
     And 2 messages should have been received
 
@@ -150,16 +122,12 @@ Feature: Lexing AMI
     And 5 Pong responses without an ActionID
     And 5 Pong responses with an ActionID of randomness
 
-    When the buffer is lexed
-
     Then the protocol should have lexed without syntax errors
     And 10 messages should have been received
 
   Scenario: A Pong with an ActionID
     Given a new lexer
     And a Pong response with an ActionID of 1224469850.61673
-
-    When the buffer is lexed
 
     Then the first message received should have a key "ActionID" with value "1224469850.61673"
 
@@ -170,7 +138,6 @@ Feature: Lexing AMI
     And the custom stanza named "call" has key "Uniqueid" with value "1173223225.10309"
 
     When the custom stanza named "call" is added to the buffer
-    And the buffer is lexed
 
     Then the 1st message received should have a key "Uniqueid" with value "1173223225.10309"
 
@@ -186,7 +153,6 @@ Feature: Lexing AMI
     And the custom stanza named "person" has key "I have spaces" with value "i have trailing padding   "
 
     When the custom stanza named "person" is added to the buffer
-    And the buffer is lexed
 
     Then the protocol should have lexed without syntax errors
     And the first message received should have a key "Name" with value "Jay Phillips"
@@ -202,8 +168,6 @@ Feature: Lexing AMI
     Given a new lexer
     And a normal login success with events split into two pieces
 
-    When the buffer is lexed
-
     Then the protocol should have lexed without syntax errors
     And 1 message should have been received
 
@@ -211,8 +175,6 @@ Feature: Lexing AMI
     Given a new lexer
     And an AMI error whose message is "Missing action in request"
     And a normal login success with events
-
-    When the buffer is lexed
 
     Then the protocol should have lexed without syntax errors
     And 1 AMI error should have been received
@@ -224,8 +186,6 @@ Feature: Lexing AMI
     And a normal login success with events
     And an immediate response with text "Yes, plain English is sent sometimes over AMI."
     And a normal login success with events
-
-    When the buffer is lexed
 
     Then the protocol should have lexed without syntax errors
     And 3 messages should have been received
@@ -239,7 +199,6 @@ Feature: Lexing AMI
     And a custom header for event identified by "this_event" whose key is "AppData" and value is "agi://localhost"
 
     When the custom event identified by "this_event" is added to the buffer
-    And the buffer is lexed
 
     Then the protocol should have lexed without syntax errors
     And 1 event should have been received
@@ -252,8 +211,6 @@ Feature: Lexing AMI
     Given a new lexer
     And syntactically invalid immediate_packet_with_colon
     And a stanza break
-
-    When the buffer is lexed
 
     Then 0 messages should have been received
     And the protocol should have lexed with 1 syntax error

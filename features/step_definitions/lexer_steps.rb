@@ -123,10 +123,6 @@ When 'the custom event identified by "$identifier" is added to the buffer' do |i
   @lexer << stringified_event
 end
 
-When "the buffer is lexed" do
-  @lexer.parse_buffer
-end
-
 ########################################
 #### THEN
 ########################################

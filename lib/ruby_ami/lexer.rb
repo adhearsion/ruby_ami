@@ -38,6 +38,8 @@ module RubyAMI
       parse_buffer
     end
 
+    private
+
     def parse_buffer
       # Special case for the protocol header
       if @buffer =~ PROMPT
@@ -65,8 +67,6 @@ module RubyAMI
       end
       @buffer.slice! 0, @processed
     end
-
-    protected
 
     def parse_message(raw)
       # Mark this message as processed, including the 4 stripped cr/lf bytes
