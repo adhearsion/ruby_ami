@@ -17,12 +17,13 @@ module RubyAMI
     RESPONSE          = /response: */i, #UNUSED?
     SUCCESS           = /response: *success\r\n/i,
     PONG              = /response: *pong\r\n/i,
-    EVENT             = /event: *(.*)?\r\n/i,
+    EVENT             = /event: *(?<event_name>.*)?\r\n/i,
     ERROR             = /response: *error\r\n/i,
     FOLLOWS           = /response: *follows\r\n/i,
     FOLLOWSBODY       = /(.*)?\r?\n?(?:--END COMMAND--\r\n\r\n|\r\n\r\n\r\n)/m
     SCANNER           = /.*?#{STANZA_BREAK}/m
     HEADER_SLICE      = /.*\r\n/
+    CLASSIFIER        = /(?<event>#{EVENT})|(?<success>#{SUCCESS})|(?<pong>#{PONG})|(?<follows>#{FOLLOWS})|(?<error>#{ERROR})|/
 
     attr_accessor :ami_version
 
@@ -71,17 +72,18 @@ module RubyAMI
       # Mark this message as processed, including the 4 stripped cr/lf bytes
       @processed += raw.length
 
-      msg = case raw
-      when '' # Ignore blank lines
-        return
-      when EVENT
-        Event.new $1
-      when SUCCESS, PONG
+      return if raw == ''
+
+      match = raw.match CLASSIFIER
+
+      msg = if match[:event]
+        Event.new match[:event_name]
+      elsif match[:success] || match[:pong]
         Response.new
-      when FOLLOWS
+      elsif match[:follows]
         response_follows = true
         Response.new
-      when ERROR
+      elsif match[:error]
         Error.new
       end
 
