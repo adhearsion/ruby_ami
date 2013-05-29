@@ -28,30 +28,30 @@ module RubyAMI
 
     def initialize(delegate = nil)
       @delegate = delegate
-      @data = ""
+      @buffer = ""
       @ami_version = 0.0
     end
 
     def <<(new_data)
-      @data << new_data
+      @buffer << new_data
       parse_buffer
     end
 
     def parse_buffer
       # Special case for the protocol header
-      if @data =~ PROMPT
+      if @buffer =~ PROMPT
         @ami_version = $1
-        @data.slice! HEADER_SLICE
+        @buffer.slice! HEADER_SLICE
       end
 
       # We need at least one complete message before parsing
-      return unless @data.include?(STANZA_BREAK)
+      return unless @buffer.include?(STANZA_BREAK)
 
       @processed = ''
 
       response_follows_message = false
       current_message = nil
-      @data.scan(SCANNER).each do |raw|
+      @buffer.scan(SCANNER).each do |raw|
         if response_follows_message
           if handle_response_follows(response_follows_message, raw)
             @processed << raw
@@ -62,7 +62,7 @@ module RubyAMI
           response_follows_message = parse_message raw
         end
       end
-      @data.slice! 0, @processed.length
+      @buffer.slice! 0, @processed.length
       @processed = ''
     end
 
