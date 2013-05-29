@@ -21,6 +21,8 @@ module RubyAMI
     ERROR             = /response: *error\r\n/i,
     FOLLOWS           = /response: *follows\r\n/i,
     FOLLOWSBODY       = /(.*)?\r?\n?(?:--END COMMAND--\r\n\r\n|\r\n\r\n\r\n)/m
+    SCANNER           = /.*?#{STANZA_BREAK}/m
+    HEADER_SLICE      = /.*\r\n/
 
     attr_accessor :ami_version
 
@@ -39,7 +41,7 @@ module RubyAMI
       # Special case for the protocol header
       if @data =~ PROMPT
         @ami_version = $1
-        @data.slice!(/.*\r\n/)
+        @data.slice!(HEADER_SLICE)
       end
 
       # We need at least one complete message before parsing
@@ -49,7 +51,7 @@ module RubyAMI
 
       response_follows_message = false
       current_message = nil
-      @data.scan(/.*?#{STANZA_BREAK}/m).each do |raw|
+      @data.scan(SCANNER).each do |raw|
         if response_follows_message
           if handle_response_follows response_follows_message, raw
             @processed << raw
@@ -91,7 +93,7 @@ module RubyAMI
       @processed << raw
 
       # Strip off the header line
-      raw.slice!(/.*\r\n/)
+      raw.slice!(HEADER_SLICE)
       populate_message_body msg, raw
 
       if response_follows
