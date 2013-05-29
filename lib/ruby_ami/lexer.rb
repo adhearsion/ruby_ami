@@ -8,7 +8,7 @@ module RubyAMI
     LOOSE_NEWLINE     = /\r?\n/, #UNUSED?
     WHITE             = /[\t ]/, #UNUSED?
     COLON             = /: */, #UNUSED?
-    STANZA_BREAK      = /\r\n\r\n/,
+    STANZA_BREAK      = "\r\n\r\n"
     REST_OF_LINE      = /(.*)?\r\n/, #UNUSED?
     PROMPT            = /Asterisk Call Manager\/(\d+\.\d+)\r\n/,
     KEY               = /([[[:alnum:]][[:print:]]])[\r\n:]+/, #UNUSED?
@@ -45,7 +45,7 @@ module RubyAMI
       end
 
       # We need at least one complete message before parsing
-      return unless @data =~ STANZA_BREAK
+      return unless @data.include?(STANZA_BREAK)
 
       @processed = ''
 
