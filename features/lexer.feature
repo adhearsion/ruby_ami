@@ -18,13 +18,14 @@ Feature: Lexing AMI
     Then the protocol should have lexed without syntax errors
     And 1 message should have been received
 
-#  Scenario: Lexing the initial AMI header and then a Response:Follows section
-#    Given a new lexer
-#    And a version header for AMI 1.0
-#    And a multi-line Response:Follows body of ragel_description
-#
-#    Then the protocol should have lexed without syntax errors
-#    And the 'follows' body of 1 message received should equal ragel_description
+  @wip
+  Scenario: Lexing the initial AMI header and then a Response:Follows section
+    Given a new lexer
+    And a version header for AMI 1.0
+    And a multi-line Response:Follows body of ragel_description
+
+    Then the protocol should have lexed without syntax errors
+    And the 'follows' body of 1 message received should equal ragel_description
 
   Scenario: Lexing a Response:Follows section with no body
     Given a new lexer
@@ -74,14 +75,15 @@ Feature: Lexing AMI
 
     Then the protocol should have lexed without syntax errors
 
-#  Scenario: Lexing the initial AMI header and then a Response:Follows section
-#    Given a new lexer
-#    And a version header for AMI 1.0
-#    And a multi-line Response:Follows body of ragel_description
-#    And a multi-line Response:Follows body of ragel_description
-#
-#    Then the protocol should have lexed without syntax errors
-#    And the 'follows' body of 2 messages received should equal ragel_description
+  @wip
+  Scenario: Lexing the initial AMI header and then a Response:Follows section
+    Given a new lexer
+    And a version header for AMI 1.0
+    And a multi-line Response:Follows body of ragel_description
+    And a multi-line Response:Follows body of ragel_description
+
+    Then the protocol should have lexed without syntax errors
+    And the 'follows' body of 2 messages received should equal ragel_description
 
   Scenario: Lexing a stanza without receiving an AMI header
     Given a new lexer

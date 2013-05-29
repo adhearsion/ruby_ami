@@ -4,10 +4,14 @@ guard 'rspec', :cli => '--format documentation' do
   watch('spec/spec_helper.rb')  { "spec/" }
 end
 
-guard 'shell' do
-  watch("lib/ruby_ami/lexer.rb") { `rake features benchmark` }
+guard 'cucumber', cli: '--no-profile --color --format progress --strict --tags ~@wip' do
+  watch("lib/ruby_ami/lexer.rb")                        { 'features' }
+  watch(%r{^features/.+\.feature$})
+  watch(%r{^features/support/.+$})                      { 'features' }
+  watch(%r{^features/step_definitions/(.+)_steps\.rb$}) { |m| Dir[File.join("**/#{m[1]}.feature")][0] || 'features' }
 end
 
-guard 'shell' do
-  watch(/benchmarks\/*/) { `rake benchmark` }
+guard 'rake', task: 'benchmark' do
+  watch("lib/ruby_ami/lexer.rb")
+  watch(/benchmarks\/*/)
 end

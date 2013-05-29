@@ -27,5 +27,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency %q<rake>, [">= 0"]
   s.add_development_dependency %q<guard-rspec>
   s.add_development_dependency %q<guard-shell>
+  s.add_development_dependency %q<guard-cucumber>
+  s.add_development_dependency %q<guard-rake>
   s.add_development_dependency %q<benchmark_suite>
 end
