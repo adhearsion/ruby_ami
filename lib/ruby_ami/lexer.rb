@@ -47,14 +47,14 @@ module RubyAMI
       # We need at least one complete message before parsing
       return unless @buffer.include?(STANZA_BREAK)
 
-      @processed = ''
+      @processed = 0
 
       response_follows_message = false
       current_message = nil
       @buffer.scan(SCANNER).each do |raw|
         if response_follows_message
           if handle_response_follows(response_follows_message, raw)
-            @processed << raw
+            @processed += raw.length
             message_received response_follows_message
             response_follows_message = nil
           end
@@ -62,15 +62,14 @@ module RubyAMI
           response_follows_message = parse_message raw
         end
       end
-      @buffer.slice! 0, @processed.length
-      @processed = ''
+      @buffer.slice! 0, @processed
     end
 
     protected
 
     def parse_message(raw)
       # Mark this message as processed, including the 4 stripped cr/lf bytes
-      @processed << raw
+      @processed += raw.length
 
       msg = case raw
       when '' # Ignore blank lines
