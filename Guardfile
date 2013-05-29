@@ -4,7 +4,7 @@ guard 'rspec', :cli => '--format documentation' do
   watch('spec/spec_helper.rb')  { "spec/" }
 end
 
-guard 'cucumber', cli: '--no-profile --color --format progress --strict --tags ~@wip' do
+guard 'cucumber', cli: '--profile default --color --format progress' do
   watch("lib/ruby_ami/lexer.rb")                        { 'features' }
   watch(%r{^features/.+\.feature$})
   watch(%r{^features/support/.+$})                      { 'features' }
