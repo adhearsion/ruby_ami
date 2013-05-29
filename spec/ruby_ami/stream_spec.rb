@@ -100,31 +100,28 @@ Message: Recording started
 
       it "can process an action with a Response: Follows result" do
         action_id = RubyAMI.new_uuid
-        mocked_server(1, lambda { @stream.send_action('Command', 'Command' => 'dialplan add extension 1,1,AGI,agi:async into adhearsion-redirect') }) do |val, server|
+        response = nil
+        mocked_server(1, lambda { response = @stream.send_action('Command', 'Command' => 'dialplan add extension 1,1,AGI,agi:async into adhearsion-redirect') }) do |val, server|
           val.should == <<-ACTION
 Action: command\r
 ActionID: #{action_id}\r
 Command: dialplan add extension 1,1,AGI,agi:async into adhearsion-redirect\r
 \r
-        ACTION
+          ACTION
 
-        server.send_data <<-EVENT
-Response: Follows\r
-Privilege: Command\r
-ActionID: #{action_id}\r
-Extension '1,1,AGI(agi:async)' added into 'adhearsion-redirect' context\r
---END COMMAND--\r
-\r
+          server.send_data <<-EVENT
+Response: Follows
+Privilege: Command
+ActionID: #{action_id}
+Extension '1,1,AGI(agi:async)' added into 'adhearsion-redirect' context
+--END COMMAND--
+
           EVENT
         end
 
-        expected_response_msg = Response.new 'Privilege' => 'Command', 'ActionID' => action_id
-        expected_response_msg.text_body = %q{Extension '1,1,AGI(agi:async)' added into 'adhearsion-redirect' context}
-        client_messages.should be == [
-          Stream::Connected.new,
-          expected_response_msg,
-          Stream::Disconnected.new
-        ]
+        expected_response = Response.new 'Privilege' => 'Command', 'ActionID' => action_id
+        expected_response.text_body = %q{Extension '1,1,AGI(agi:async)' added into 'adhearsion-redirect' context}
+        response.should == expected_response
       end
 
       context "with a username and password set" do
