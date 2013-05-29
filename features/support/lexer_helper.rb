@@ -93,11 +93,6 @@ end
 
 def follows_body_text(name)
   case name
-    when "ragel_description"
-      "Ragel is a software development tool that allows user actions to
-      be embedded into the transitions of a regular expression's corresponding state machine,
-      eliminating the need to switch from the regular expression engine and user code execution
-      environment and back again."
     when "with_colon_after_first_line"
       "Host                            Username       Refresh State                Reg.Time                 \r\nlax.teliax.net:5060             jicksta            105 Registered           Tue, 11 Nov 2008 02:29:55"
     when "show_channels_from_wayne"
