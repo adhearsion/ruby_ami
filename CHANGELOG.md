@@ -1,4 +1,5 @@
 # [develop](https://github.com/adhearsion/ruby_ami)
+  * Enhancement: Replace Ragel parser with pure Ruby version, which is much more performant and simpler
   * Bugfix: Handle AGI 5xx responses
 
 # [2.0.0](https://github.com/adhearsion/ruby_ami/compare/v1.3.3...v2.0.0) - [2013-04-15](https://rubygems.org/gems/ruby_ami/versions/2.0.0)
