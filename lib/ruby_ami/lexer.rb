@@ -15,15 +15,16 @@ module RubyAMI
     KEYVALUEPAIR      = /^([[[:alnum:]]-_ ]+): *(.*)\r\n/,
     FOLLOWSDELIMITER  = /\r?\n?--END COMMAND--\r\n\r\n/,
     RESPONSE          = /response: */i, #UNUSED?
-    SUCCESS           = /response: *success\r\n/i,
-    PONG              = /response: *pong\r\n/i,
-    EVENT             = /event: *(?<event_name>.*)?\r\n/i,
-    ERROR             = /response: *error\r\n/i,
-    FOLLOWS           = /response: *follows\r\n/i,
+    SUCCESS           = /response: *success/i,
+    PONG              = /response: *pong/i,
+    EVENT             = /event: *(?<event_name>.*)?/i,
+    ERROR             = /response: *error/i,
+    FOLLOWS           = /response: *follows/i,
     FOLLOWSBODY       = /(.*)?\r?\n?(?:--END COMMAND--\r\n\r\n|\r\n\r\n\r\n)/m
     SCANNER           = /.*?#{STANZA_BREAK}/m
     HEADER_SLICE      = /.*\r\n/
-    CLASSIFIER        = /(?<event>#{EVENT})|(?<success>#{SUCCESS})|(?<pong>#{PONG})|(?<follows>#{FOLLOWS})|(?<error>#{ERROR})|/
+    IMMEDIATE_RESP    = /.*/
+    CLASSIFIER        = /((?<event>#{EVENT})|(?<success>#{SUCCESS})|(?<pong>#{PONG})|(?<follows>#{FOLLOWS})|(?<error>#{ERROR})|(?<immediate>#{IMMEDIATE_RESP})\r\n)\r\n/i
 
     attr_accessor :ami_version
 
@@ -85,6 +86,9 @@ module RubyAMI
         Response.new
       elsif match[:error]
         Error.new
+      elsif match[:immediate]
+        immediate_response = true
+        Response.from_immediate_response match[:immediate]
       end
 
       # Strip off the header line
