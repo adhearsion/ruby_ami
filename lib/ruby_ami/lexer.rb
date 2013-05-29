@@ -87,6 +87,10 @@ module RubyAMI
       elsif match[:error]
         Error.new
       elsif match[:immediate]
+        if raw.include?(':')
+          syntax_error_encountered raw.chomp(STANZA_BREAK)
+          return
+        end
         immediate_response = true
         Response.from_immediate_response match[:immediate]
       end
