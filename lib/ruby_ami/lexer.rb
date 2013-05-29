@@ -2,25 +2,15 @@
 
 module RubyAMI
   class Lexer
-    CR                = /\r/, #UNUSED?
-    LF                = /\n/, #UNUSED?
-    CRLF              = /\r\n/, #UNUSED?
-    LOOSE_NEWLINE     = /\r?\n/, #UNUSED?
-    WHITE             = /[\t ]/, #UNUSED?
-    COLON             = /: */, #UNUSED?
     STANZA_BREAK      = "\r\n\r\n"
-    REST_OF_LINE      = /(.*)?\r\n/, #UNUSED?
-    PROMPT            = /Asterisk Call Manager\/(\d+\.\d+)\r\n/,
-    KEY               = /([[[:alnum:]][[:print:]]])[\r\n:]+/, #UNUSED?
-    KEYVALUEPAIR      = /^([[[:alnum:]]-_ ]+): *(.*)\r\n/,
-    FOLLOWSDELIMITER  = /\r?\n?--END COMMAND--\r\n\r\n/,
-    RESPONSE          = /response: */i, #UNUSED?
-    SUCCESS           = /response: *success/i,
-    PONG              = /response: *pong/i,
-    EVENT             = /event: *(?<event_name>.*)?/i,
-    ERROR             = /response: *error/i,
-    FOLLOWS           = /response: *follows/i,
-    FOLLOWSBODY       = /(.*)?\r?\n?(?:--END COMMAND--\r\n\r\n|\r\n\r\n\r\n)/m
+    PROMPT            = /Asterisk Call Manager\/(\d+\.\d+)\r\n/
+    KEYVALUEPAIR      = /^([[[:alnum:]]-_ ]+): *(.*)\r\n/
+    FOLLOWSDELIMITER  = /\r?\n?--END COMMAND--\r\n\r\n/
+    SUCCESS           = /response: *success/i
+    PONG              = /response: *pong/i
+    EVENT             = /event: *(?<event_name>.*)?/i
+    ERROR             = /response: *error/i
+    FOLLOWS           = /response: *follows/i
     SCANNER           = /.*?#{STANZA_BREAK}/m
     HEADER_SLICE      = /.*\r\n/
     IMMEDIATE_RESP    = /.*/
