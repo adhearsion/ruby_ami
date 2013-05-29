@@ -30,7 +30,7 @@ module RubyAMI
     def initialize(delegate = nil)
       @delegate = delegate
       @buffer = ""
-      @ami_version = 0.0
+      @ami_version = nil
     end
 
     def <<(new_data)
