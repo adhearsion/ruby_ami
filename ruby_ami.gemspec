@@ -5,11 +5,11 @@ require "ruby_ami/version"
 Gem::Specification.new do |s|
   s.name        = "ruby_ami"
   s.version     = RubyAMI::VERSION
-  s.authors     = ["Ben Langfeld"]
-  s.email       = ["ben@langfeld.me"]
+  s.authors     = ["Ben Langfeld", "Ben Klang"]
+  s.email       = ["ben@langfeld.me", "bklang@mojolingo.com"]
   s.homepage    = ""
   s.summary     = %q{Futzing with AMI so you don't have to}
-  s.description = %q{A Ruby client library for the Asterisk Management Interface build on eventmachine.}
+  s.description = %q{A Ruby client library for the Asterisk Management Interface built on Celluloid IO.}
 
   s.rubyforge_project = "ruby_ami"
 
@@ -27,5 +27,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency %q<rake>, [">= 0"]
   s.add_development_dependency %q<guard-rspec>
   s.add_development_dependency %q<guard-shell>
-  s.add_development_dependency %q<ruby_gntp>
+  s.add_development_dependency %q<guard-cucumber>
+  s.add_development_dependency %q<guard-rake>
+  s.add_development_dependency %q<benchmark_suite>
 end

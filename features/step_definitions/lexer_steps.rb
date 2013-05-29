@@ -123,10 +123,6 @@ When 'the custom event identified by "$identifier" is added to the buffer' do |i
   @lexer << stringified_event
 end
 
-When "the buffer is lexed" do
-  @lexer.resume!
-end
-
 ########################################
 #### THEN
 ########################################
@@ -160,7 +156,7 @@ Then /^the 'follows' body of (\d+) messages? received should equal (\w+)$/ do |n
 end
 
 Then "the version should be set to $version" do |version|
-  @lexer.ami_version.should eql(version.to_f)
+  @lexer.ami_version.should eql(version)
 end
 
 Then /^the ([\w\d]*) message received should have a key "([^\"]*)" with value "([^\"]*)"$/ do |ordered,key,value|
