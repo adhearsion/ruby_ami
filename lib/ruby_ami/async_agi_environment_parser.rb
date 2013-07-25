@@ -11,7 +11,7 @@ module RubyAMI
     end
 
     def to_hash
-      hash= {}
+      hash = {}
       @environment_string.split(NEWLINE).map! do |p|
         p.split COLON_SPACE
       end.each do |element_0, element_1|
