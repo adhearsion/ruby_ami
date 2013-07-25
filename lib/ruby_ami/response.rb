@@ -28,6 +28,10 @@ module RubyAMI
       @headers.clone
     end
 
+    def merge_headers!(hash)
+      @headers.merge!(hash)
+    end
+
     def [](arg)
       @headers[arg.to_s]
     end

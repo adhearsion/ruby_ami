@@ -87,9 +87,9 @@ module RubyAMI
 
       # Strip off the header line
       raw.slice! HEADER_SLICE
-      populate_message_body msg, raw
+      raw_index= populate_message_body msg, raw
 
-      return msg if response_follows && !handle_response_follows(msg, raw)
+      return msg if response_follows && !handle_response_follows(msg, raw[raw_index..-1])
 
       case msg
       when Error
@@ -128,11 +128,15 @@ module RubyAMI
       @delegate.syntax_error_encountered ignored_chunk
     end
 
+    # returns first char index after last match
     def populate_message_body(obj, raw)
-      while raw.slice! KEYVALUEPAIR
-        obj[$1] = $2
+      headers= raw.scan(KEYVALUEPAIR)
+      if match= $~
+        obj.merge_headers!(Hash[headers])
+        match.end(match.size - 1) + 2
+      else
+        0
       end
-      obj
     end
 
     def handle_response_follows(obj, raw)
