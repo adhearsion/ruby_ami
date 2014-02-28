@@ -1,5 +1,9 @@
 # [develop](https://github.com/adhearsion/ruby_ami)
 
+# [2.2.0](https://github.com/adhearsion/ruby_ami/compare/v2.1.0...v2.2.0) - [2014-02-28](https://rubygems.org/gems/ruby_ami/versions/2.2.0)
+  * Feature: Provide timestamps of events as `#timestamp`, `#receipt_time` and `#best_time`.
+  * Feature: More performant parsing of AGI environment strings
+
 # [2.1.0](https://github.com/adhearsion/ruby_ami/compare/v2.0.0...v2.1.0) - [2013-05-29](https://rubygems.org/gems/ruby_ami/versions/2.1.0)
   * Enhancement: Replace Ragel parser with pure Ruby version, which is much more performant and simpler
   * Bugfix: Handle AGI 5xx responses
