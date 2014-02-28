@@ -1,4 +1,6 @@
 # [develop](https://github.com/adhearsion/ruby_ami)
+
+# [2.2.0](https://github.com/adhearsion/ruby_ami/compare/v2.1.0...v2.2.0) - [2014-02-28](https://rubygems.org/gems/ruby_ami/versions/2.2.0)
   * Feature: Provide timestamps of events as `#timestamp`, `#receipt_time` and `#best_time`.
   * Feature: More performant parsing of AGI environment strings
 
