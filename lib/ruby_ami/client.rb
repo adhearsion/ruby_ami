@@ -50,6 +50,11 @@ module RubyAMI
       end
     end
 
+    def close
+      @events_stream.terminate
+      @actions_stream.terminate
+    end
+
     private
 
     def pass_event(event)
