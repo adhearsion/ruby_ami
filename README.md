@@ -10,26 +10,23 @@ NB: If you're looking to develop an application on Asterisk, you should take a l
 ```ruby
 require 'ruby_ami'
 
-client = RubyAMI::Client.new username: 'test',
-                        password:      'test',
-                        host:          '127.0.0.1',
-                        port:          5038,
-                        event_handler: ->(e) { handle_event e },
-                        logger:        Logger.new(STDOUT),
-                        log_level:     Logger::DEBUG,
-                        timeout:       10
+stream = RubyAMI::Stream.new '127.0.0.1', 5038, 'manager', 'password',
+                              ->(e) { handle_event e },
+                              Logger.new(STDOUT), 10
 
 def handle_event(event)
   case event.name
   when 'FullyBooted'
-    client.async.send_action 'Originate', 'Channel' => 'SIP/foo'
+    stream.async.send_action 'Originate', 'Channel' => 'SIP/foo'
   end
 end
 
-client.start
+stream.start
 
-Celluloid::Actor.join client
+Celluloid::Actor.join stream
 ```
+
+RubyAMI also has a class called `RubyAMI::Client` which used to be the main usage method. The purpose of this class was to tie together two AMI connections and separate events and action execution between the two in order to avoid some issues present in Asterisk < 1.8 with regards to separating overlapping events and executing multiple actions simultaneously. These issues are no longer present, and so **`RubyAMI::Client` is now deprecated and will be removed in RubyAMI 3.0**.
 
 ## Links:
 * [Source](https://github.com/adhearsion/ruby_ami)
