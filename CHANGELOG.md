@@ -1,4 +1,6 @@
 # [develop](https://github.com/adhearsion/ruby_ami)
+
+# [2.2.1](https://github.com/adhearsion/ruby_ami/compare/v2.2.0...v2.2.1) - [2014-05-22](https://rubygems.org/gems/ruby_ami/versions/2.2.1)
   * Bugfix: Ensure DateTime is present when consumer code doesn't `require 'time'` ([#24](https://github.com/adhearsion/ruby_ami/issues/24))
 
 # [2.2.0](https://github.com/adhearsion/ruby_ami/compare/v2.1.0...v2.2.0) - [2014-02-28](https://rubygems.org/gems/ruby_ami/versions/2.2.0)
