@@ -1,4 +1,6 @@
 # encoding: utf-8
+require 'time'
+
 require 'ruby_ami/response'
 
 module RubyAMI
