@@ -21,7 +21,7 @@ def handle_event(event)
   end
 end
 
-stream.start
+stream.run
 
 Celluloid::Actor.join stream
 ```
