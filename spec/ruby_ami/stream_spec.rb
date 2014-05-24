@@ -257,4 +257,12 @@ ActionID: #{RubyAMI.new_uuid}
       @stream.alive?.should be false
     end
   end
+
+  describe Stream::Connected do
+    its(:name) { should == 'RubyAMI::Stream::Connected' }
+  end
+
+  describe Stream::Disconnected do
+    its(:name) { should == 'RubyAMI::Stream::Disconnected' }
+  end
 end

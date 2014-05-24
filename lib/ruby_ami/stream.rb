@@ -2,6 +2,10 @@
 module RubyAMI
   class Stream
     class ConnectionStatus
+      def name
+        self.class.to_s
+      end
+
       def eql?(other)
         other.is_a? self.class
       end
