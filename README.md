@@ -21,9 +21,7 @@ def handle_event(event)
   end
 end
 
-$stream.run
-
-Celluloid::Actor.join $stream
+$stream.run # This will block until the actor is terminated elsewhere. $stream.async.run is also available if you need to do other things in the main thread.
 ```
 
 RubyAMI also has a class called `RubyAMI::Client` which used to be the main usage method. The purpose of this class was to tie together two AMI connections and separate events and action execution between the two in order to avoid some issues present in Asterisk < 1.8 with regards to separating overlapping events and executing multiple actions simultaneously. These issues are no longer present, and so **`RubyAMI::Client` is now deprecated and will be removed in RubyAMI 3.0**.
