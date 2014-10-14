@@ -66,8 +66,7 @@ module RubyAMI
       it 'should shut down the client' do
         subject.events_stream.terminate
         sleep 0.2
-        pending "waiting on RSpec upstream fix"
-        subject.should_not be_alive
+        subject.alive?.should be_false
       end
     end
 
@@ -75,8 +74,7 @@ module RubyAMI
       it 'should shut down the client' do
         subject.actions_stream.terminate
         sleep 0.2
-        pending "waiting on RSpec upstream fix"
-        subject.should_not be_alive
+        subject.alive?.should be_false
       end
     end
 
