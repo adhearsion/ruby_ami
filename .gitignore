@@ -4,6 +4,8 @@ Gemfile.lock
 pkg/*
 
 .rvmrc
+.ruby-version
+.ruby-gemset
 .yardoc
 doc
 coverage
