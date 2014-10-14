@@ -66,7 +66,7 @@ module RubyAMI
       it 'should shut down the client' do
         subject.events_stream.terminate
         sleep 0.2
-        subject.should_not be_alive
+        subject.alive?.should be_false
       end
     end
 
@@ -74,7 +74,7 @@ module RubyAMI
       it 'should shut down the client' do
         subject.actions_stream.terminate
         sleep 0.2
-        subject.should_not be_alive
+        subject.alive?.should be_false
       end
     end
 
