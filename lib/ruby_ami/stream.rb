@@ -39,16 +39,18 @@ module RubyAMI
       Timeout::timeout(@timeout) do
         @socket = TCPSocket.from_ruby_socket ::TCPSocket.new(@host, @port)
       end
+   
       post_init
       loop { receive_data @socket.readpartial(4096) }
-    rescue Errno::ECONNREFUSED, SocketError => e
-      logger.error "Connection failed due to #{e.class}. Check your config and the server."
-    rescue EOFError
-      logger.info "Client socket closed!"
-    rescue Timeout::Error
-      logger.error "Timeout exceeded while trying to connect."
-    ensure
-      async.terminate
+      
+      rescue Errno::ECONNREFUSED, SocketError => e
+        logger.error "Connection failed due to #{e.class}. Check your config and the server."
+      rescue EOFError
+        logger.info "Client socket closed!"
+      rescue Timeout::Error
+        logger.error "Timeout exceeded while trying to connect."
+      ensure
+        async.terminate
     end
 
     def post_init
