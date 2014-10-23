@@ -61,14 +61,16 @@ module RubyAMI
       @socket.write data
     end
 
-    def send_action(name, headers = {})
+    def send_action(name, headers = {}, error_handler = self.method(:abort))
       condition = Celluloid::Condition.new
       action = dispatch_action name, headers do |response|
         condition.signal response
       end
       condition.wait
       action.response.tap do |resp|
-        abort resp if resp.is_a? Exception
+        if resp.is_a? Exception
+          error_handler.call(resp)
+        end
       end
     end
 

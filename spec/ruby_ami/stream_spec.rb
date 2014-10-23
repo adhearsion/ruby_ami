@@ -191,19 +191,41 @@ Message: Recording started
       end
 
       describe 'when it is an error' do
-        it 'should be raised by #send_action, but not kill the stream' do
-          send_action = lambda do
-            expect { @stream.send_action 'status' }.to raise_error(RubyAMI::Error, 'Action failed')
-            @stream.should be_alive
-          end
+        describe 'when there is no error handler' do
+          it 'should be raised by #send_action, but not kill the stream' do
+            send_action = lambda do
+              expect { @stream.send_action 'status' }.to raise_error(RubyAMI::Error, 'Action failed')
+              @stream.should be_alive
+            end
 
-          mocked_server(1, send_action) do |val, server|
-            server.send_data <<-EVENT
+            mocked_server(1, send_action) do |val, server|
+              server.send_data <<-EVENT
 Response: Error
 ActionID: #{RubyAMI.new_uuid}
 Message: Action failed
 
-            EVENT
+              EVENT
+            end
+          end
+        end
+
+        describe 'when there is an error handler' do
+          it 'should call the error handler' do
+            error_handler = lambda { |resp| resp.should be_a_kind_of RubyAMI::Error }
+
+            send_action = lambda do
+              expect { @stream.send_action 'status', {}, error_handler }.to_not raise_error
+              @stream.should be_alive
+            end
+
+            mocked_server(1, send_action) do |val, server|
+              server.send_data <<-EVENT
+Response: Error
+ActionID: #{RubyAMI.new_uuid}
+Message: Action failed
+
+              EVENT
+            end
           end
         end
       end
