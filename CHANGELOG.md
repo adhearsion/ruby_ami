@@ -1,5 +1,6 @@
 # [develop](https://github.com/adhearsion/ruby_ami)
   * Feature: Allow optional error handler when calling `send_action`
+  * Bugfix: Add support for Goodbye responses instead of processing them as syntax errors 
   * Bugfix: Allow simple example of event handling (switching on `event.name` only) to work by giving connection status events a name to match their class names
 
 # [2.2.1](https://github.com/adhearsion/ruby_ami/compare/v2.2.0...v2.2.1) - [2014-05-22](https://rubygems.org/gems/ruby_ami/versions/2.2.1)

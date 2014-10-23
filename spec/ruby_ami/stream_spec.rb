@@ -190,6 +190,20 @@ Message: Recording started
         response.should == Response.new('ActionID' => RubyAMI.new_uuid, 'Message' => 'Recording started')
       end
 
+      it 'should handle disconnect as a Response' do
+        response = nil
+        mocked_server(1, lambda { response = @stream.send_action 'Logoff' }) do |val, server|
+          server.send_data <<-EVENT
+Response: Goodbye
+ActionID: #{RubyAMI.new_uuid}
+Message: Thanks for all the fish.
+
+          EVENT
+        end
+  
+        response.should == Response.new('ActionID' => RubyAMI.new_uuid, 'Message' => 'Thanks for all the fish.')
+      end
+
       describe 'when it is an error' do
         describe 'when there is no error handler' do
           it 'should be raised by #send_action, but not kill the stream' do
