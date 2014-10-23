@@ -39,16 +39,18 @@ module RubyAMI
       Timeout::timeout(@timeout) do
         @socket = TCPSocket.from_ruby_socket ::TCPSocket.new(@host, @port)
       end
+   
       post_init
       loop { receive_data @socket.readpartial(4096) }
-    rescue Errno::ECONNREFUSED, SocketError => e
-      logger.error "Connection failed due to #{e.class}. Check your config and the server."
-    rescue EOFError
-      logger.info "Client socket closed!"
-    rescue Timeout::Error
-      logger.error "Timeout exceeded while trying to connect."
-    ensure
-      async.terminate
+      
+      rescue Errno::ECONNREFUSED, SocketError => e
+        logger.error "Connection failed due to #{e.class}. Check your config and the server."
+      rescue EOFError
+        logger.info "Client socket closed!"
+      rescue Timeout::Error
+        logger.error "Timeout exceeded while trying to connect."
+      ensure
+        async.terminate
     end
 
     def post_init
@@ -61,14 +63,20 @@ module RubyAMI
       @socket.write data
     end
 
-    def send_action(name, headers = {})
+    def send_action(name, headers = {}, error_handler = nil)
       condition = Celluloid::Condition.new
       action = dispatch_action name, headers do |response|
         condition.signal response
       end
       condition.wait
       action.response.tap do |resp|
-        abort resp if resp.is_a? Exception
+        if resp.is_a? Exception
+          if error_handler == nil
+            abort resp
+          else
+            error_handler.call(resp)
+          end
+        end
       end
     end
 
