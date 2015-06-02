@@ -41,7 +41,7 @@ module RubyAMI
       end
       post_init
       loop { receive_data @socket.readpartial(4096) }
-    rescue Errno::ECONNREFUSED, SocketError => e
+    rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError => e
       logger.error "Connection failed due to #{e.class}. Check your config and the server."
     rescue EOFError
       logger.info "Client socket closed!"
