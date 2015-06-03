@@ -1,7 +1,9 @@
 # [develop](https://github.com/adhearsion/ruby_ami)
-  * Bugfix: Catch for Errno::HOSTUNREACH error when connecting to AMI
+
+# [2.3.0](https://github.com/adhearsion/ruby_ami/compare/v2.2.1...v2.3.0) - [2015-06-01](https://rubygems.org/gems/ruby_ami/versions/2.3.0)
   * Feature: Allow optional error handler when calling `send_action`
-  * Bugfix: Add support for Goodbye responses instead of processing them as syntax errors 
+  * Bugfix: Catch for Errno::HOSTUNREACH error when connecting to AMI
+  * Bugfix: Add support for Goodbye responses instead of processing them as syntax errors
   * Bugfix: Allow simple example of event handling (switching on `event.name` only) to work by giving connection status events a name to match their class names
 
 # [2.2.1](https://github.com/adhearsion/ruby_ami/compare/v2.2.0...v2.2.1) - [2014-05-22](https://rubygems.org/gems/ruby_ami/versions/2.2.1)
