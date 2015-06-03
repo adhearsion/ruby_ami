@@ -11,10 +11,11 @@ module RubyAMI
     EVENT             = /event: *(?<event_name>.*)?/i
     ERROR             = /response: *error/i
     FOLLOWS           = /response: *follows/i
+    GOODBYE           = /response: *goodbye/i
     SCANNER           = /.*?#{STANZA_BREAK}/m
     HEADER_SLICE      = /.*\r\n/
     IMMEDIATE_RESP    = /.*/
-    CLASSIFIER        = /((?<event>#{EVENT})|(?<success>#{SUCCESS})|(?<pong>#{PONG})|(?<follows>#{FOLLOWS})|(?<error>#{ERROR})|(?<immediate>#{IMMEDIATE_RESP})\r\n)\r\n/i
+    CLASSIFIER        = /((?<event>#{EVENT})|(?<success>#{SUCCESS})|(?<pong>#{PONG})|(?<follows>#{FOLLOWS})|(?<error>#{ERROR})|(?<goodbye>#{GOODBYE})|(?<immediate>#{IMMEDIATE_RESP})\r\n)\r\n/i
 
     attr_accessor :ami_version
 
@@ -69,7 +70,7 @@ module RubyAMI
 
       msg = if match[:event]
         Event.new match[:event_name]
-      elsif match[:success] || match[:pong]
+      elsif match[:success] || match[:pong] || match[:goodbye]
         Response.new
       elsif match[:follows]
         response_follows = true

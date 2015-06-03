@@ -2,6 +2,10 @@
 module RubyAMI
   class Stream
     class ConnectionStatus
+      def name
+        self.class.to_s
+      end
+
       def eql?(other)
         other.is_a? self.class
       end
@@ -37,7 +41,7 @@ module RubyAMI
       end
       post_init
       loop { receive_data @socket.readpartial(4096) }
-    rescue Errno::ECONNREFUSED, SocketError => e
+    rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH, SocketError => e
       logger.error "Connection failed due to #{e.class}. Check your config and the server."
     rescue EOFError
       logger.info "Client socket closed!"
@@ -57,14 +61,16 @@ module RubyAMI
       @socket.write data
     end
 
-    def send_action(name, headers = {})
+    def send_action(name, headers = {}, error_handler = self.method(:abort))
       condition = Celluloid::Condition.new
       action = dispatch_action name, headers do |response|
         condition.signal response
       end
       condition.wait
       action.response.tap do |resp|
-        abort resp if resp.is_a? Exception
+        if resp.is_a? Exception
+          error_handler.call(resp)
+        end
       end
     end
 

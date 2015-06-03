@@ -190,20 +190,56 @@ Message: Recording started
         response.should == Response.new('ActionID' => RubyAMI.new_uuid, 'Message' => 'Recording started')
       end
 
-      describe 'when it is an error' do
-        it 'should be raised by #send_action, but not kill the stream' do
-          send_action = lambda do
-            expect { @stream.send_action 'status' }.to raise_error(RubyAMI::Error, 'Action failed')
-            @stream.should be_alive
-          end
+      it 'should handle disconnect as a Response' do
+        response = nil
+        mocked_server(1, lambda { response = @stream.send_action 'Logoff' }) do |val, server|
+          server.send_data <<-EVENT
+Response: Goodbye
+ActionID: #{RubyAMI.new_uuid}
+Message: Thanks for all the fish.
 
-          mocked_server(1, send_action) do |val, server|
-            server.send_data <<-EVENT
+          EVENT
+        end
+  
+        response.should == Response.new('ActionID' => RubyAMI.new_uuid, 'Message' => 'Thanks for all the fish.')
+      end
+
+      describe 'when it is an error' do
+        describe 'when there is no error handler' do
+          it 'should be raised by #send_action, but not kill the stream' do
+            send_action = lambda do
+              expect { @stream.send_action 'status' }.to raise_error(RubyAMI::Error, 'Action failed')
+              @stream.should be_alive
+            end
+
+            mocked_server(1, send_action) do |val, server|
+              server.send_data <<-EVENT
 Response: Error
 ActionID: #{RubyAMI.new_uuid}
 Message: Action failed
 
-            EVENT
+              EVENT
+            end
+          end
+        end
+
+        describe 'when there is an error handler' do
+          it 'should call the error handler' do
+            error_handler = lambda { |resp| resp.should be_a_kind_of RubyAMI::Error }
+
+            send_action = lambda do
+              expect { @stream.send_action 'status', {}, error_handler }.to_not raise_error
+              @stream.should be_alive
+            end
+
+            mocked_server(1, send_action) do |val, server|
+              server.send_data <<-EVENT
+Response: Error
+ActionID: #{RubyAMI.new_uuid}
+Message: Action failed
+
+              EVENT
+            end
           end
         end
       end
@@ -256,5 +292,13 @@ ActionID: #{RubyAMI.new_uuid}
       end
       @stream.alive?.should be false
     end
+  end
+
+  describe Stream::Connected do
+    its(:name) { should == 'RubyAMI::Stream::Connected' }
+  end
+
+  describe Stream::Disconnected do
+    its(:name) { should == 'RubyAMI::Stream::Disconnected' }
   end
 end
