@@ -15,6 +15,30 @@ NB: If you're looking to develop an application on Asterisk, you should take a l
     gem install ruby_ami
 
 ## Usage
+
+In order to setup a connection to listen for AMI events, one can do:
+
+```ruby
+require 'ruby_ami'
+
+stream = RubyAMI::Stream.new '127.0.0.1', 5038, 'manager', 'password',
+                              ->(e) { handle_event e },
+                              Logger.new(STDOUT), 10
+
+def handle_event(event)
+  case event.name
+  when 'FullyBooted'
+    puts "The server booted and is available for commands."
+  else
+    puts "Received an event from Asterisk: #{event.inspect}"
+  end
+end
+
+$stream.run # This will block until the actor is terminated elsewhere. $stream.async.run is also available if you need to do other things in the main thread.
+```
+
+It is also possible to execute actions in response to events:
+
 ```ruby
 require 'ruby_ami'
 
@@ -25,12 +49,16 @@ $stream = RubyAMI::Stream.new '127.0.0.1', 5038, 'manager', 'password',
 def handle_event(event)
   case event.name
   when 'FullyBooted'
-    $stream.async.send_action 'Originate', 'Channel' => 'SIP/foo'
+    puts "The connection was successful. Originating a call."
+    response = $stream.send_action 'Originate', 'Channel' => 'SIP/foo'
+    puts "The call origination resulted in #{response.inspect}"
   end
 end
 
-$stream.run # This will block until the actor is terminated elsewhere. $stream.async.run is also available if you need to do other things in the main thread.
+$stream.run
 ```
+
+Executing actions does not strictly have to be done within the event handler, but it is not valid to send AMI events before receiving a `FullyBooted` event. If you attempt to execute an action prior to this, it may fail, and `RubyAMI::Stream` will not help you recover or queue the action until the connection is `FullyBooted`; you must manage this timing yourself. That said, assuming you take care of this, you may invoke `RubyAMI::Stream#send_action` from anywhere in your code and it will return the response of the action.
 
 RubyAMI also has a class called `RubyAMI::Client` which used to be the main usage method. The purpose of this class was to tie together two AMI connections and separate events and action execution between the two in order to avoid some issues present in Asterisk < 1.8 with regards to separating overlapping events and executing multiple actions simultaneously. These issues are no longer present, and so **`RubyAMI::Client` is now deprecated and will be removed in RubyAMI 3.0**.
 
