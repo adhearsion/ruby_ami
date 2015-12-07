@@ -57,6 +57,10 @@ module RubyAMI
       login @username, @password if @username && @password
     end
 
+    def version
+      @lexer.ami_version
+    end
+
     def send_data(data)
       @socket.write data
     end
