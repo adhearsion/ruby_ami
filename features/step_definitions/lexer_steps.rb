@@ -17,7 +17,7 @@ Given "a new lexer" do
 end
 
 Given "a version header for AMI $version" do |version|
-  @lexer << "Asterisk Call Manager/1.0\r\n"
+  @lexer << "Asterisk Call Manager/#{version}\r\n"
 end
 
 Given "a normal login success with events" do

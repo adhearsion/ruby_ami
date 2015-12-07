@@ -3,7 +3,7 @@
 module RubyAMI
   class Lexer
     STANZA_BREAK      = "\r\n\r\n"
-    PROMPT            = /Asterisk Call Manager\/(\d+\.\d+)\r\n/
+    PROMPT            = /Asterisk Call Manager\/(\d+(\.\d+)*)\r\n/
     KEYVALUEPAIR      = /^([[[:alnum:]]-_ ]+): *(.*)\r\n/
     FOLLOWSDELIMITER  = /\r?\n?--END COMMAND--\r\n\r\n/
     SUCCESS           = /response: *success/i

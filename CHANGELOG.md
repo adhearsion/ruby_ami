@@ -1,5 +1,8 @@
 # [develop](https://github.com/adhearsion/ruby_ami)
 
+# [2.4.0](https://github.com/adhearsion/ruby_ami/compare/v2.3.0...v2.4.0) - [2015-12-07](https://rubygems.org/gems/ruby_ami/versions/2.4.0)
+  # Feature: Reveal the AMI version for a `Stream` via `Stream#version`
+
 # [2.3.0](https://github.com/adhearsion/ruby_ami/compare/v2.2.1...v2.3.0) - [2015-06-01](https://rubygems.org/gems/ruby_ami/versions/2.3.0)
   * Feature: Allow optional error handler when calling `send_action`
   * Bugfix: Catch for Errno::HOSTUNREACH error when connecting to AMI

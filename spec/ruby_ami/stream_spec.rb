@@ -59,6 +59,25 @@ module RubyAMI
         mocked_server 0, -> { @stream.started?.should be_true }
       end
 
+      it "stores the reported AMI version" do
+        expect_connected_event
+        expect_disconnected_event
+        mocked_server(1, lambda {
+          @stream.send_action('Command') # Just to get the server kicked in to replying using the below block
+          expect(@stream.version).to eq('2.8.0')
+        }) do |val, server|
+          server.send_data "Asterisk Call Manager/2.8.0\n"
+
+          # Just to unblock the above command before the actor shuts down
+          server.send_data <<-EVENT
+Response: Success
+ActionID: #{RubyAMI.new_uuid}
+Message: Recording started
+
+          EVENT
+        end
+      end
+
       it "can send an action" do
         expect_connected_event
         expect_disconnected_event
