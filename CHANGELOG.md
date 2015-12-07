@@ -1,4 +1,5 @@
 # [develop](https://github.com/adhearsion/ruby_ami)
+  # Feature: Reveal the AMI version for a `Stream` via `Stream#version`
 
 # [2.3.0](https://github.com/adhearsion/ruby_ami/compare/v2.2.1...v2.3.0) - [2015-06-01](https://rubygems.org/gems/ruby_ami/versions/2.3.0)
   * Feature: Allow optional error handler when calling `send_action`

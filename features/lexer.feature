@@ -5,10 +5,10 @@ Feature: Lexing AMI
 
   Scenario: Lexing only the initial AMI version header
     Given a new lexer
-    And a version header for AMI 1.0
+    And a version header for AMI 2.8.0
 
     Then the protocol should have lexed without syntax errors
-    And the version should be set to 1.0
+    And the version should be set to 2.8.0
 
   Scenario: Lexing the initial AMI header and a login attempt
     Given a new lexer
