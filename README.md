@@ -78,4 +78,4 @@ RubyAMI also has a class called `RubyAMI::Client` which used to be the main usag
 
 ## Copyright
 
-Copyright (c) 2013 Ben Langfeld, Jay Phillips. MIT licence (see LICENSE for details).
+Copyright (c) 2011-2016 Ben Langfeld, Jay Phillips. MIT licence (see LICENSE for details).
