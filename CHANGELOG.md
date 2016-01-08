@@ -1,5 +1,6 @@
 # [develop](https://github.com/adhearsion/ruby_ami)
   * Breaking change: Removed the deprecated `RubyAMI::Client` because it is no longer relevant.
+  * Breaking change: Start the connection when the `RubyAMI::Stream` starts, permitting supervised restart of the stream on connection failure. To support this, the event callback now passes a second parameter which is the stream itself.
 
 # [2.4.0](https://github.com/adhearsion/ruby_ami/compare/v2.3.0...v2.4.0) - [2015-12-07](https://rubygems.org/gems/ruby_ami/versions/2.4.0)
   # Feature: Reveal the AMI version for a `Stream` via `Stream#version`

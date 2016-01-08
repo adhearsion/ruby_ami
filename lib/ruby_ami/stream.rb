@@ -29,6 +29,7 @@ module RubyAMI
       @lexer = Lexer.new self
       @sent_actions   = {}
       @causal_actions = {}
+      async.run
     end
 
     [:started, :stopped, :ready].each do |state|
@@ -125,7 +126,7 @@ module RubyAMI
     end
 
     def fire_event(event)
-      @event_callback.call event
+      @event_callback.call event, current_actor
     end
 
     def register_sent_action(action)

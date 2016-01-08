@@ -21,10 +21,6 @@ In order to setup a connection to listen for AMI events, one can do:
 ```ruby
 require 'ruby_ami'
 
-stream = RubyAMI::Stream.new '127.0.0.1', 5038, 'manager', 'password',
-                              ->(e) { handle_event e },
-                              Logger.new(STDOUT), 10
-
 def handle_event(event)
   case event.name
   when 'FullyBooted'
@@ -34,7 +30,19 @@ def handle_event(event)
   end
 end
 
-stream.run # This will block until the actor is terminated elsewhere. stream.async.run is also available if you need to do other things in the main thread.
+stream = RubyAMI::Stream.new '127.0.0.1', 5038, 'manager', 'password',
+                              ->(e) { handle_event e },
+                              Logger.new(STDOUT), 10
+
+Celluloid.join(stream) # This will block until the actor is terminated elsewhere. Otherwise, the actor will run in its own thread allowing other work to be done here.
+```
+
+Note that using `Stream.new`, the actor will shut down when the connection is lost (and in this case the program will exit). If it is necessary to restart the actor on failure, you can start it in a Celluloid supervisor:
+
+```ruby
+RubyAMI::Stream.supervise_as :ami_connection, '127.0.0.1', 5038, 'manager', 'password',
+                              ->(e) { handle_event e },
+                              Logger.new(STDOUT), 10
 ```
 
 It is also possible to execute actions in response to events:
@@ -42,20 +50,20 @@ It is also possible to execute actions in response to events:
 ```ruby
 require 'ruby_ami'
 
-$stream = RubyAMI::Stream.new '127.0.0.1', 5038, 'manager', 'password',
-                              ->(e) { handle_event e },
-                              Logger.new(STDOUT), 10
-
-def handle_event(event)
+def handle_event(event, stream)
   case event.name
   when 'FullyBooted'
     puts "The connection was successful. Originating a call."
-    response = $stream.send_action 'Originate', 'Channel' => 'SIP/foo'
+    response = stream.send_action 'Originate', 'Channel' => 'SIP/foo'
     puts "The call origination resulted in #{response.inspect}"
   end
 end
 
-$stream.run
+stream = RubyAMI::Stream.new '127.0.0.1', 5038, 'manager', 'password',
+                              ->(e) { handle_event e },
+                              Logger.new(STDOUT), 10
+
+Celluloid.join(stream) # This will block until the actor is terminated elsewhere. Otherwise, the actor will run in its own thread allowing other work to be done here.
 ```
 
 Executing actions does not strictly have to be done within the event handler, but it is not valid to send AMI events before receiving a `FullyBooted` event. If you attempt to execute an action prior to this, it may fail, and `RubyAMI::Stream` will not help you recover or queue the action until the connection is `FullyBooted`; you must manage this timing yourself. That said, assuming you take care of this, you may invoke `RubyAMI::Stream#send_action` from anywhere in your code and it will return the response of the action.
