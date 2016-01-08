@@ -34,7 +34,7 @@ def handle_event(event)
   end
 end
 
-$stream.run # This will block until the actor is terminated elsewhere. $stream.async.run is also available if you need to do other things in the main thread.
+stream.run # This will block until the actor is terminated elsewhere. stream.async.run is also available if you need to do other things in the main thread.
 ```
 
 It is also possible to execute actions in response to events:
