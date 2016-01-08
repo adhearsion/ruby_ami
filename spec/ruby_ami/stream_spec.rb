@@ -10,9 +10,9 @@ module RubyAMI
     end
 
     before do
-      def client.message_received(message)
+      def client.message_received(message, stream)
         @messages ||= Queue.new
-        @messages << message
+        @messages << [message, stream]
       end
 
       def client.messages
@@ -33,8 +33,7 @@ module RubyAMI
       mock_target = MockServer.new
       mock_target.should_receive(:receive_data).send(*(times ? [:exactly, times] : [:at_least, 1])).with &block
       s = ServerMock.new '127.0.0.1', server_port, mock_target
-      @stream = Stream.new '127.0.0.1', server_port, username, password, lambda { |m| client.message_received m }
-      @stream.async.run
+      @stream = Stream.new '127.0.0.1', server_port, username, password, lambda { |m, stream| client.message_received m, stream }
       fake_client.call if fake_client.respond_to? :call
       Celluloid::Actor.join s
       Timeout.timeout 5 do
@@ -42,26 +41,18 @@ module RubyAMI
       end
     end
 
-    def expect_connected_event
-      client.should_receive(:message_received).with Stream::Connected.new
-    end
-
-    def expect_disconnected_event
-      client.should_receive(:message_received).with Stream::Disconnected.new
-    end
-
     before { @sequence = 1 }
 
     describe "after connection" do
       it "should be started" do
-        expect_connected_event
-        expect_disconnected_event
         mocked_server 0, -> { @stream.started?.should be_true }
+        client_messages.should be == [
+          [Stream::Connected.new, @stream],
+          [Stream::Disconnected.new, @stream],
+        ]
       end
 
       it "stores the reported AMI version" do
-        expect_connected_event
-        expect_disconnected_event
         mocked_server(1, lambda {
           @stream.send_action('Command') # Just to get the server kicked in to replying using the below block
           expect(@stream.version).to eq('2.8.0')
@@ -79,8 +70,6 @@ Message: Recording started
       end
 
       it "can send an action" do
-        expect_connected_event
-        expect_disconnected_event
         mocked_server(1, lambda { @stream.send_action('Command') }) do |val, server|
           val.should == <<-ACTION
 Action: command\r
@@ -98,8 +87,6 @@ Message: Recording started
       end
 
       it "can send an action with headers" do
-        expect_connected_event
-        expect_disconnected_event
         mocked_server(1, lambda { @stream.send_action('Command', 'Command' => 'RECORD FILE evil') }) do |val, server|
           val.should == <<-ACTION
 Action: command\r
@@ -148,8 +135,6 @@ Extension '1,1,AGI(agi:async)' added into 'adhearsion-redirect' context
         let(:password) { 'jones' }
 
         it "should log itself in" do
-          expect_connected_event
-          expect_disconnected_event
           mocked_server(1, lambda { }) do |val, server|
             val.should == <<-ACTION
 Action: login\r
@@ -183,18 +168,13 @@ Cause: 0
       end
 
       client_messages.should be == [
-        Stream::Connected.new,
-        Event.new('Hangup', 'Channel' => 'SIP/101-3f3f', 'Uniqueid' => '1094154427.10', 'Cause' => '0'),
-        Stream::Disconnected.new
+        [Stream::Connected.new, @stream],
+        [Event.new('Hangup', 'Channel' => 'SIP/101-3f3f', 'Uniqueid' => '1094154427.10', 'Cause' => '0'), @stream],
+        [Stream::Disconnected.new, @stream],
       ]
     end
 
     describe 'when a response is received' do
-      before do
-        expect_connected_event
-        expect_disconnected_event
-      end
-
       it 'should be returned from #send_action' do
         response = nil
         mocked_server(1, lambda { response = @stream.send_action 'Command', 'Command' => 'RECORD FILE evil' }) do |val, server|
@@ -219,7 +199,7 @@ Message: Thanks for all the fish.
 
           EVENT
         end
-  
+
         response.should == Response.new('ActionID' => RubyAMI.new_uuid, 'Message' => 'Thanks for all the fish.')
       end
 
@@ -304,12 +284,14 @@ ActionID: #{RubyAMI.new_uuid}
     end
 
     it 'puts itself in the stopped state and fires a disconnected event when unbound' do
-      expect_connected_event
-      expect_disconnected_event
       mocked_server(1, lambda { @stream.send_data 'Foo' }) do |val, server|
         @stream.stopped?.should be false
       end
       @stream.alive?.should be false
+      client_messages.should be == [
+        [Stream::Connected.new, @stream],
+        [Stream::Disconnected.new, @stream],
+      ]
     end
   end
 
