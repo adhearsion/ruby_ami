@@ -3,6 +3,6 @@ require 'spec_helper'
 
 module RubyAMI
   describe Error do
-    pending
+    skip
   end # Error
 end # RubyAMI

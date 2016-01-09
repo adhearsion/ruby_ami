@@ -9,12 +9,12 @@ module RubyAMI
 
     subject { described_class.new environment_string }
 
-    its(:to_s) { should == environment_string }
-    its(:to_s) { should_not be environment_string }
+    it { subject.to_s.should == environment_string }
+    it { subject.to_s.should_not be environment_string }
 
     describe 'retrieving a hash representation' do
-      its(:to_hash) do
-        should == {
+      it "should return a hash of attributes" do
+        subject.to_hash.should == {
           :agi_request      => 'async',
           :agi_channel      => 'SIP/1234-00000000',
           :agi_language     => 'en',
