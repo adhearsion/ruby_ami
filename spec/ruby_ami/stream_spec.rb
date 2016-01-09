@@ -39,6 +39,7 @@ module RubyAMI
         Celluloid::Actor.join s
         Celluloid::Actor.join @stream
       end
+    rescue Timeout::Error
     end
 
     before { @sequence = 1 }
