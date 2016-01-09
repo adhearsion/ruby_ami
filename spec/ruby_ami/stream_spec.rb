@@ -6,7 +6,7 @@ module RubyAMI
     let(:server_port) { 50000 - rand(1000) }
 
     def client
-      @client ||= mock('Client')
+      @client ||= double('Client')
     end
 
     before do
@@ -31,7 +31,7 @@ module RubyAMI
 
     def mocked_server(times = nil, fake_client = nil, &block)
       mock_target = MockServer.new
-      mock_target.should_receive(:receive_data).send(*(times ? [:exactly, times] : [:at_least, 1])).with &block
+      mock_target.should_receive(:receive_data).send(*(times ? [:exactly, times] : [:at_least, 1]), &block)
       s = ServerMock.new '127.0.0.1', server_port, mock_target
       @stream = Stream.new '127.0.0.1', server_port, username, password, lambda { |m, stream| client.message_received m, stream }
       fake_client.call if fake_client.respond_to? :call
@@ -45,7 +45,7 @@ module RubyAMI
 
     describe "after connection" do
       it "should be started" do
-        mocked_server 0, -> { @stream.started?.should be_true }
+        mocked_server 0, -> { @stream.started?.should be true }
         client_messages.should be == [
           [Stream::Connected.new, @stream],
           [Stream::Disconnected.new, @stream],
@@ -296,10 +296,14 @@ ActionID: #{RubyAMI.new_uuid}
   end
 
   describe Stream::Connected do
-    its(:name) { should == 'RubyAMI::Stream::Connected' }
+    it "has a name matching the class" do
+      subject.name.should == 'RubyAMI::Stream::Connected'
+    end
   end
 
   describe Stream::Disconnected do
-    its(:name) { should == 'RubyAMI::Stream::Disconnected' }
+    it "has a name matching the class" do
+      subject.name.should == 'RubyAMI::Stream::Disconnected'
+    end
   end
 end
