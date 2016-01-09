@@ -1,15 +1,13 @@
 language: ruby
 sudo: false
 rvm:
-  - 1.9.3
-  - 2.0.0
-  - 2.1.0
-  - jruby
+  - 2.2.0
+  - 2.3.0
+  - jruby-9.0.4.0
   - rbx-2.1.1
   - ruby-head
 matrix:
   allow_failures:
     - rvm: ruby-head
-    - rvm: rbx-2.1.1
 notifications:
   irc: "irc.freenode.org#adhearsion"

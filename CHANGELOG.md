@@ -1,4 +1,5 @@
 # [develop](https://github.com/adhearsion/ruby_ami)
+  * Breaking change: Ruby 1.9 is no longer supported. Minimum supported versions are Ruby 2.2.0 and JRuby 9.0.0.0
   * Breaking change: Removed the deprecated `RubyAMI::Client` because it is no longer relevant.
   * Breaking change: Start the connection when the `RubyAMI::Stream` starts, permitting supervised restart of the stream on connection failure. To support this, the event callback now passes a second parameter which is the stream itself.
 

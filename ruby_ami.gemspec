@@ -13,6 +13,8 @@ Gem::Specification.new do |s|
 
   s.rubyforge_project = "ruby_ami"
 
+  s.required_ruby_version = '>= 2.2.0'
+
   s.files         = `git ls-files`.split("\n") << 'lib/ruby_ami/lexer.rb'
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
   s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
