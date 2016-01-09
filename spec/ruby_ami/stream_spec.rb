@@ -36,8 +36,8 @@ module RubyAMI
       @stream = Stream.new '127.0.0.1', server_port, username, password, lambda { |m| client.message_received m }
       @stream.async.run
       fake_client.call if fake_client.respond_to? :call
-      Celluloid::Actor.join s
       Timeout.timeout 5 do
+        Celluloid::Actor.join s
         Celluloid::Actor.join @stream
       end
     end
