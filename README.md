@@ -31,17 +31,17 @@ def handle_event(event)
 end
 
 stream = RubyAMI::Stream.new '127.0.0.1', 5038, 'manager', 'password',
-                              ->(e) { handle_event e },
+                              ->(e, stream) { handle_event e },
                               Logger.new(STDOUT), 10
 
-Celluloid.join(stream) # This will block until the actor is terminated elsewhere. Otherwise, the actor will run in its own thread allowing other work to be done here.
+Celluloid::Actor.join(stream) # This will block until the actor is terminated elsewhere. Otherwise, the actor will run in its own thread allowing other work to be done here.
 ```
 
 Note that using `Stream.new`, the actor will shut down when the connection is lost (and in this case the program will exit). If it is necessary to restart the actor on failure, you can start it in a Celluloid supervisor:
 
 ```ruby
 RubyAMI::Stream.supervise_as :ami_connection, '127.0.0.1', 5038, 'manager', 'password',
-                              ->(e) { handle_event e },
+                              ->(e, steam) { handle_event e },
                               Logger.new(STDOUT), 10
 ```
 
@@ -60,10 +60,10 @@ def handle_event(event, stream)
 end
 
 stream = RubyAMI::Stream.new '127.0.0.1', 5038, 'manager', 'password',
-                              ->(e) { handle_event e },
+                              ->(e, stream) { handle_event e, stream },
                               Logger.new(STDOUT), 10
 
-Celluloid.join(stream) # This will block until the actor is terminated elsewhere. Otherwise, the actor will run in its own thread allowing other work to be done here.
+Celluloid::Actor.join(stream) # This will block until the actor is terminated elsewhere. Otherwise, the actor will run in its own thread allowing other work to be done here.
 ```
 
 Executing actions does not strictly have to be done within the event handler, but it is not valid to send AMI events before receiving a `FullyBooted` event. If you attempt to execute an action prior to this, it may fail, and `RubyAMI::Stream` will not help you recover or queue the action until the connection is `FullyBooted`; you must manage this timing yourself. That said, assuming you take care of this, you may invoke `RubyAMI::Stream#send_action` from anywhere in your code and it will return the response of the action.
