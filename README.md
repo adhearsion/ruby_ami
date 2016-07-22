@@ -41,7 +41,7 @@ Note that using `Stream.new`, the actor will shut down when the connection is lo
 
 ```ruby
 RubyAMI::Stream.supervise_as :ami_connection, '127.0.0.1', 5038, 'manager', 'password',
-                              ->(e, steam) { handle_event e },
+                              ->(e, stream) { handle_event e },
                               Logger.new(STDOUT), 10
 ```
 
