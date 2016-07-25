@@ -7,7 +7,7 @@
 [![Coverage Status](https://coveralls.io/repos/adhearsion/ruby_ami/badge.png?branch=develop)](https://coveralls.io/r/adhearsion/ruby_ami)
 [![Inline docs](http://inch-ci.org/github/adhearsion/ruby_ami.png?branch=develop)](http://inch-ci.org/github/adhearsion/ruby_ami)
 
-RubyAMI is an AMI client library in Ruby and based on EventMachine with the sole purpose of providing a connection to the Asterisk Manager Interface. RubyAMI does not provide any features beyond connection management and protocol parsing. Actions are sent over the wire, and responses are returned. Events are passed to a callback you define. It's up to you to match these up into something useful. In this regard, RubyAMI is very similar to [Blather](https://github.com/sprsquish/blather) for XMPP or [Punchblock](https://github.com/adhearsion/punchblock), the Ruby 3PCC library. In fact, Punchblock uses RubyAMI under the covers for its Asterisk implementation, including an implementation of AsyncAGI.
+RubyAMI is an AMI client library in Ruby based on Celluloid with the sole purpose of providing a connection to the Asterisk Manager Interface. RubyAMI does not provide any features beyond connection management and protocol parsing. Actions are sent over the wire, and responses are returned. Events are passed to a callback you define. It's up to you to match these up into something useful. In this regard, RubyAMI is very similar to [Blather](https://github.com/sprsquish/blather) for XMPP or [Punchblock](https://github.com/adhearsion/punchblock), the Ruby 3PCC library. In fact, Punchblock uses RubyAMI under the covers for its Asterisk implementation, including an implementation of AsyncAGI.
 
 NB: If you're looking to develop an application on Asterisk, you should take a look at the [Adhearsion](http://adhearsion.com) framework first. This library is much lower level.
 
@@ -21,10 +21,6 @@ In order to setup a connection to listen for AMI events, one can do:
 ```ruby
 require 'ruby_ami'
 
-stream = RubyAMI::Stream.new '127.0.0.1', 5038, 'manager', 'password',
-                              ->(e) { handle_event e },
-                              Logger.new(STDOUT), 10
-
 def handle_event(event)
   case event.name
   when 'FullyBooted'
@@ -34,7 +30,19 @@ def handle_event(event)
   end
 end
 
-$stream.run # This will block until the actor is terminated elsewhere. $stream.async.run is also available if you need to do other things in the main thread.
+stream = RubyAMI::Stream.new '127.0.0.1', 5038, 'manager', 'password',
+                              ->(e, stream) { handle_event e },
+                              Logger.new(STDOUT), 10
+
+Celluloid::Actor.join(stream) # This will block until the actor is terminated elsewhere. Otherwise, the actor will run in its own thread allowing other work to be done here.
+```
+
+Note that using `Stream.new`, the actor will shut down when the connection is lost (and in this case the program will exit). If it is necessary to restart the actor on failure, you can start it in a Celluloid supervisor:
+
+```ruby
+RubyAMI::Stream.supervise_as :ami_connection, '127.0.0.1', 5038, 'manager', 'password',
+                              ->(e, stream) { handle_event e },
+                              Logger.new(STDOUT), 10
 ```
 
 It is also possible to execute actions in response to events:
@@ -42,25 +50,23 @@ It is also possible to execute actions in response to events:
 ```ruby
 require 'ruby_ami'
 
-$stream = RubyAMI::Stream.new '127.0.0.1', 5038, 'manager', 'password',
-                              ->(e) { handle_event e },
-                              Logger.new(STDOUT), 10
-
-def handle_event(event)
+def handle_event(event, stream)
   case event.name
   when 'FullyBooted'
     puts "The connection was successful. Originating a call."
-    response = $stream.send_action 'Originate', 'Channel' => 'SIP/foo'
+    response = stream.send_action 'Originate', 'Channel' => 'SIP/foo'
     puts "The call origination resulted in #{response.inspect}"
   end
 end
 
-$stream.run
+stream = RubyAMI::Stream.new '127.0.0.1', 5038, 'manager', 'password',
+                              ->(e, stream) { handle_event e, stream },
+                              Logger.new(STDOUT), 10
+
+Celluloid::Actor.join(stream) # This will block until the actor is terminated elsewhere. Otherwise, the actor will run in its own thread allowing other work to be done here.
 ```
 
 Executing actions does not strictly have to be done within the event handler, but it is not valid to send AMI events before receiving a `FullyBooted` event. If you attempt to execute an action prior to this, it may fail, and `RubyAMI::Stream` will not help you recover or queue the action until the connection is `FullyBooted`; you must manage this timing yourself. That said, assuming you take care of this, you may invoke `RubyAMI::Stream#send_action` from anywhere in your code and it will return the response of the action.
-
-RubyAMI also has a class called `RubyAMI::Client` which used to be the main usage method. The purpose of this class was to tie together two AMI connections and separate events and action execution between the two in order to avoid some issues present in Asterisk < 1.8 with regards to separating overlapping events and executing multiple actions simultaneously. These issues are no longer present, and so **`RubyAMI::Client` is now deprecated and will be removed in RubyAMI 3.0**.
 
 ## Links:
 * [Source](https://github.com/adhearsion/ruby_ami)
@@ -78,4 +84,4 @@ RubyAMI also has a class called `RubyAMI::Client` which used to be the main usag
 
 ## Copyright
 
-Copyright (c) 2013 Ben Langfeld, Jay Phillips. MIT licence (see LICENSE for details).
+Copyright (c) 2011-2016 Ben Langfeld, Jay Phillips. MIT licence (see LICENSE for details).

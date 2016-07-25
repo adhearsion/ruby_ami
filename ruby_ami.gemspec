@@ -13,12 +13,15 @@ Gem::Specification.new do |s|
 
   s.rubyforge_project = "ruby_ami"
 
+  s.required_ruby_version = '>= 2.2.0'
+
   s.files         = `git ls-files`.split("\n") << 'lib/ruby_ami/lexer.rb'
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
   s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   s.require_paths = ["lib"]
 
   s.add_runtime_dependency %q<celluloid-io>, ["~> 0.13"]
+  s.add_runtime_dependency %q<celluloid>, ["~> 0.16.0"]
 
   s.add_development_dependency %q<bundler>, ["~> 1.0"]
   s.add_development_dependency %q<rspec>, ["~> 2.5"]
