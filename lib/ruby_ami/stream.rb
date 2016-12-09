@@ -54,7 +54,7 @@ module RubyAMI
 
     def post_init
       @state = :started
-      fire_event Connected.new
+      async.fire_event Connected.new
       login @username, @password if @username && @password
     end
 
@@ -93,7 +93,7 @@ module RubyAMI
           action << message
           complete_causal_action_for_event message if action.complete?
         else
-          fire_event message
+          async.fire_event message
         end
       when Response, Error
         action = sent_action_for_response message
