@@ -42,6 +42,19 @@ module RubyAMI
     rescue Timeout::Error
     end
 
+    def mocked_server2(times = nil, fake_client = nil, handle_event = lambda { |m, stream| client.message_received m, stream }, &block)
+      mock_target = MockServer.new
+      mock_target.should_receive(:receive_data).send(*(times ? [:exactly, times] : [:at_least, 1]), &block)
+      s = ServerMock.new '127.0.0.1', server_port, mock_target
+      @stream = Stream.new '127.0.0.1', server_port, username, password, handle_event
+      fake_client.call if fake_client.respond_to? :call
+      Timeout.timeout 60 do
+        Celluloid::Actor.join s
+        Celluloid::Actor.join @stream
+      end
+    rescue Timeout::Error
+    end
+
     before { @sequence = 1 }
 
     describe "after connection" do
@@ -202,6 +215,26 @@ Message: Thanks for all the fish.
         end
 
         response.should == Response.new('ActionID' => RubyAMI.new_uuid, 'Message' => 'Thanks for all the fish.')
+      end
+
+      it 'should not deadlock when sending an action after receiving a response' do
+        response = nil
+
+        handle_event = lambda do |m, stream|
+          client.message_received m, stream
+          response = stream.send_action 'Command', 'Command' => 'RECORD FILE evil' if m.is_a? RubyAMI::Stream::Connected
+        end
+
+        mocked_server2(1, lambda {}, handle_event) do |val, server|
+          server.send_data <<-EVENT
+Response: Success
+ActionID: #{RubyAMI.new_uuid}
+Message: Recording started
+
+          EVENT
+        end
+
+        response.should == Response.new('ActionID' => RubyAMI.new_uuid, 'Message' => 'Recording started')
       end
 
       describe 'when it is an error' do
