@@ -3,7 +3,7 @@ require 'cgi'
 
 module RubyAMI
   class AsyncAGIEnvironmentParser
-    NEWLINE = "%0A".freeze
+    NEWLINE = '%0A'.freeze
     COLON_SPACE = '%3A%20'.freeze
 
     def initialize(environment_string)
@@ -11,20 +11,17 @@ module RubyAMI
     end
 
     def to_hash
-      to_array.inject({}) do |accumulator, element|
-        accumulator[element[0].to_sym] = CGI.unescape(element[1] || '')
-        accumulator
+      hash = {}
+      @environment_string.split(NEWLINE).map! do |p|
+        p.split COLON_SPACE
+      end.each do |element_0, element_1|
+        hash[element_0.to_sym] = CGI.unescape(element_1 || '')
       end
+      hash
     end
 
     def to_s
       @environment_string.dup
-    end
-
-    private
-
-    def to_array
-      @environment_string.split(NEWLINE).map { |p| p.split COLON_SPACE }
     end
   end
 end
