@@ -175,6 +175,26 @@ Cause: 0
       ]
     end
 
+    it 'sends events with multiple headers with the same key to the client when the stream is ready' do
+      mocked_server(1, lambda { @stream.send_data 'Foo' }) do |val, server|
+        server.send_data <<-EVENT
+Event: Status
+Channel: SIP/101-3f3f
+Variable: CDR(ds_type)=Test-INT
+Variable: from_user=ssether
+Variable: companyID=Test
+ActionID: 2
+
+        EVENT
+      end
+
+      client_messages.should be == [
+        [Stream::Connected.new, @stream],
+        [Event.new('Status', 'Channel' => 'SIP/101-3f3f', 'Variable' => 'CDR(ds_type)=Test-INT,from_user=ssether,companyID=Test', 'ActionID' => '2'), @stream],
+        [Stream::Disconnected.new, @stream],
+      ]
+    end
+
     describe 'when a response is received' do
       it 'should be returned from #send_action' do
         response = nil

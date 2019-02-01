@@ -132,6 +132,8 @@ module RubyAMI
     # returns first char index after last match
     def populate_message_body(obj, raw)
       headers = raw.scan(KEYVALUEPAIR)
+      # get the values of repeated keys (example 'Variable' header)
+      headers = headers.group_by(&:shift).map { |k, v| [ k, v.join(',') ] }
       if match = $~
         obj.merge_headers!(Hash[headers])
         match.end(match.size - 1) + 2
