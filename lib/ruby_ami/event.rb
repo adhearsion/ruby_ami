@@ -24,6 +24,11 @@ module RubyAMI
       timestamp || receipt_time
     end
 
+    # @return {} raw headers of the event
+    def headers
+      super
+    end
+
     def inspect_attributes
       [:name] + super
     end
