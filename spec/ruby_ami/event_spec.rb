@@ -8,7 +8,7 @@ module RubyAMI
     describe "#receipt_time" do
       before do
         @now = DateTime.now
-        DateTime.stub now: @now
+        allow(DateTime).to receive_messages now: @now
       end
 
       it "should be the time the object was created (event receipt time)" do
