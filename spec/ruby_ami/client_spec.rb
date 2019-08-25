@@ -30,7 +30,7 @@ module RubyAMI
     end
 
     it 'should return when the timeout option is specified and reached' do
-      skip
+      pending
       options[:timeout] = 2
       options[:host] = '192.0.2.1' # unreachable IP that will generally cause a timeout (RFC 5737)
 
