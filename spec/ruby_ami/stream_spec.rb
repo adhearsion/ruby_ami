@@ -29,9 +29,11 @@ module RubyAMI
     let(:username) { nil }
     let(:password) { nil }
 
-    def mocked_server(times = nil, fake_client = nil, &block)
+    def mocked_server(times = nil, fake_client = nil, &argument_matcher)
       mock_target = MockServer.new
-      expect(mock_target).to receive(:receive_data).send(*(times ? [:exactly, times] : [:at_least, 1]), &block)
+      expect(mock_target).to receive(:receive_data) do |*args|
+        argument_matcher.call *args
+      end.send(*(times ? [:exactly, times] : [:at_least, 1]))
       s = ServerMock.new '127.0.0.1', server_port, mock_target
       @stream = Stream.new '127.0.0.1', server_port, username, password, lambda { |m| client.message_received m }
       @stream.async.run
