@@ -12,28 +12,30 @@ module RubyAMI
       end
     end
 
-    it { should_not be_complete }
+    it { is_expected.not_to be_complete }
 
     describe "SIPPeers actions" do
-      subject { Action.new('SIPPeers') }
-      its(:has_causal_events?) { should be true }
+      it "has causal events" do
+        expect(Action.new('SIPPeers').has_causal_events?).to be true
+      end
     end
 
     describe "the ParkedCalls terminator event" do
-      subject { Action.new('ParkedCalls') }
-      its(:causal_event_terminator_name) { should == "parkedcallscomplete" }
+      it "knows its causal event terminator name" do
+        expect(Action.new('ParkedCalls').causal_event_terminator_name).to eq("parkedcallscomplete")
+      end
     end
 
     it "should properly convert itself into a String when additional headers are given" do
       string = Action.new("Hawtsawce", "Monkey" => "Zoo").to_s
-      string.should =~ /^Action: Hawtsawce\r\n/i
-      string.should =~ /[^\n]\r\n\r\n$/
-      string.should =~ /^(\w+:\s*[\w-]+\r\n){3}\r\n$/
+      expect(string).to match(/^Action: Hawtsawce\r\n/i)
+      expect(string).to match(/[^\n]\r\n\r\n$/)
+      expect(string).to match(/^(\w+:\s*[\w-]+\r\n){3}\r\n$/)
     end
 
     it "should properly convert itself into a String when no additional headers are given" do
-      Action.new("Ping").to_s.should =~ /^Action: Ping\r\nActionID: [\w-]+\r\n\r\n$/i
-      Action.new("ParkedCalls").to_s.should =~ /^Action: ParkedCalls\r\nActionID: [\w-]+\r\n\r\n$/i
+      expect(Action.new("Ping").to_s).to match(/^Action: Ping\r\nActionID: [\w-]+\r\n\r\n$/i)
+      expect(Action.new("ParkedCalls").to_s).to match(/^Action: ParkedCalls\r\nActionID: [\w-]+\r\n\r\n$/i)
     end
 
     describe '#<<' do
@@ -44,14 +46,14 @@ module RubyAMI
           before { subject << response }
 
           it 'should set the response' do
-            subject.response.should be response
+            expect(subject.response).to be response
           end
 
           it 'should call the callback' do
-            @callback_result.should be response
+            expect(@callback_result).to be response
           end
 
-          it { should be_complete }
+          it { is_expected.to be_complete }
         end
 
         context 'with an error' do
@@ -60,15 +62,15 @@ module RubyAMI
           before { subject << error }
 
           it 'should set the response' do
-            subject.response.should == error
+            expect(subject.response).to eq(error)
           end
 
-          it { should be_complete }
+          it { is_expected.to be_complete }
         end
 
         context 'with an event' do
           it 'should raise an error' do
-            lambda { subject << Event.new('foo') }.should raise_error StandardError, /causal action/
+            expect { subject << Event.new('foo') }.to raise_error StandardError, /causal action/
           end
         end
       end
@@ -80,7 +82,7 @@ module RubyAMI
         context 'with a response' do
           before { subject << response }
 
-          it { should_not be_complete }
+          it { is_expected.not_to be_complete }
         end
 
         context 'with an event' do
@@ -89,7 +91,7 @@ module RubyAMI
           before { subject << response << event }
 
           it "should add the events to the response" do
-            subject.response.events.should == [event]
+            expect(subject.response.events).to eq([event])
           end
         end
 
@@ -98,17 +100,17 @@ module RubyAMI
 
           before do
             subject << response
-            subject.should_not be_complete
+            expect(subject).not_to be_complete
             subject << event
           end
 
           it "should add the events to the response" do
-            subject.response.events.should == [event]
+            expect(subject.response.events).to eq([event])
           end
 
-          it { should be_complete }
+          it { is_expected.to be_complete }
 
-          its(:response) { should be response }
+          it { expect(subject.response).to be response }
         end
       end
     end
@@ -117,21 +119,21 @@ module RubyAMI
       describe 'with another Action' do
         context 'with identical name and headers' do
           let(:other) { Action.new name, headers }
-          it { should == other }
+          it { is_expected.to eq(other) }
         end
 
         context 'with identical name and different headers' do
           let(:other) { Action.new name, 'boo' => 'baz' }
-          it { should_not == other }
+          it { is_expected.not_to eq(other) }
         end
 
         context 'with different name and identical headers' do
           let(:other) { Action.new 'BARBAZ', headers }
-          it { should_not == other }
+          it { is_expected.not_to eq(other) }
         end
       end
 
-      it { should_not == :foo }
+      it { is_expected.not_to eq(:foo) }
     end
   end # Action
 end # RubyAMI

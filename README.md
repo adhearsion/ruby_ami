@@ -7,7 +7,7 @@
 [![Coverage Status](https://coveralls.io/repos/adhearsion/ruby_ami/badge.png?branch=develop)](https://coveralls.io/r/adhearsion/ruby_ami)
 [![Inline docs](http://inch-ci.org/github/adhearsion/ruby_ami.png?branch=develop)](http://inch-ci.org/github/adhearsion/ruby_ami)
 
-RubyAMI is an AMI client library in Ruby and based on EventMachine with the sole purpose of providing a connection to the Asterisk Manager Interface. RubyAMI does not provide any features beyond connection management and protocol parsing. Actions are sent over the wire, and responses are returned. Events are passed to a callback you define. It's up to you to match these up into something useful. In this regard, RubyAMI is very similar to [Blather](https://github.com/sprsquish/blather) for XMPP or [Punchblock](https://github.com/adhearsion/punchblock), the Ruby 3PCC library. In fact, Punchblock uses RubyAMI under the covers for its Asterisk implementation, including an implementation of AsyncAGI.
+RubyAMI is an AMI client library in Ruby based on Celluloid with the sole purpose of providing a connection to the Asterisk Manager Interface. RubyAMI does not provide any features beyond connection management and protocol parsing. Actions are sent over the wire, and responses are returned. Events are passed to a callback you define. It's up to you to match these up into something useful. In this regard, RubyAMI is very similar to [Blather](https://github.com/sprsquish/blather) for XMPP or [Punchblock](https://github.com/adhearsion/punchblock), the Ruby 3PCC library. In fact, Punchblock uses RubyAMI under the covers for its Asterisk implementation, including an implementation of AsyncAGI.
 
 NB: If you're looking to develop an application on Asterisk, you should take a look at the [Adhearsion](http://adhearsion.com) framework first. This library is much lower level.
 
@@ -34,7 +34,7 @@ def handle_event(event)
   end
 end
 
-$stream.run # This will block until the actor is terminated elsewhere. $stream.async.run is also available if you need to do other things in the main thread.
+stream.run # This will block until the actor is terminated elsewhere. stream.async.run is also available if you need to do other things in the main thread.
 ```
 
 It is also possible to execute actions in response to events:
@@ -78,4 +78,4 @@ RubyAMI also has a class called `RubyAMI::Client` which used to be the main usag
 
 ## Copyright
 
-Copyright (c) 2013 Ben Langfeld, Jay Phillips. MIT licence (see LICENSE for details).
+Copyright (c) 2011-2016 Ben Langfeld, Jay Phillips. MIT licence (see LICENSE for details).

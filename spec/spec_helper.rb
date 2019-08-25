@@ -13,6 +13,6 @@ RSpec.configure do |config|
 
   config.before :each do
     uuid = RubyAMI.new_uuid
-    RubyAMI.stub :new_uuid => uuid
+    allow(RubyAMI).to receive_messages :new_uuid => uuid
   end
 end

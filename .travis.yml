@@ -1,15 +1,24 @@
+dist: xenial
 language: ruby
-sudo: false
 rvm:
   - 1.9.3
   - 2.0.0
-  - 2.1.0
+  - 2.1.10
+  - 2.2.10
+  - 2.3.8
+  - 2.4.5
+  - 2.5.3
+  - 2.6.3
+  - jruby-9.1.17.0
   - jruby
   - rbx-2.1.1
   - ruby-head
+jdk:
+  - openjdk8 # for jruby
 matrix:
   allow_failures:
     - rvm: ruby-head
     - rvm: rbx-2.1.1
+before_install: rvm list
 notifications:
   irc: "irc.freenode.org#adhearsion"

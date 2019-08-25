@@ -1,2 +1,2 @@
-default: --tags ~@wip
+default: --strict --tags ~@wip
 wip: --wip --tags @wip
