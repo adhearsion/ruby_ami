@@ -22,7 +22,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency %q<celluloid>, ["~> 0.16.0"]
 
   s.add_development_dependency %q<bundler>, [">= 1.0"]
-  s.add_development_dependency %q<rspec>, ["~> 2.5"]
+  s.add_development_dependency %q<rspec>, [">= 3.0"]
   s.add_development_dependency %q<cucumber>, ["< 3.0"]
   s.add_development_dependency %q<yard>, ["~> 0.6"]
   s.add_development_dependency %q<rake>, ["< 11.0"]
