@@ -18,7 +18,7 @@ module RubyAMI
         end
 
         it "should be equal" do
-          event1.should be == event2
+          expect(event1).to eq(event2)
         end
       end
 
@@ -36,7 +36,7 @@ module RubyAMI
         end
 
         it "should not be equal" do
-          event1.should_not be == event2
+          expect(event1).not_to eq(event2)
         end
       end
     end
