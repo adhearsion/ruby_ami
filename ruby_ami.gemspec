@@ -25,7 +25,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency %q<rspec>, [">= 3.0"]
   s.add_development_dependency %q<cucumber>, ["< 3.0"]
   s.add_development_dependency %q<yard>, ["~> 0.6"]
-  s.add_development_dependency %q<rake>, ["< 11.0"]
+  s.add_development_dependency %q<rake>, [">= 0"]
   s.add_development_dependency %q<guard-rspec>
   s.add_development_dependency %q<guard-shell>
   s.add_development_dependency %q<guard-cucumber>
