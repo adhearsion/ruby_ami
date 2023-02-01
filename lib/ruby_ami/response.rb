@@ -20,8 +20,18 @@ module RubyAMI
       @events = []
     end
 
+    def text_body
+      if @text_body
+        @text_body
+      elsif output
+        output
+      else
+        nil
+      end
+    end
+
     def has_text_body?
-      !!@text_body
+      !!text_body
     end
 
     def headers
@@ -38,6 +48,10 @@ module RubyAMI
 
     def action_id
       @headers['ActionID']
+    end
+
+    def output
+      @headers['Output']
     end
 
     def inspect
