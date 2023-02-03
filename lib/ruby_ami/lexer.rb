@@ -138,7 +138,7 @@ module RubyAMI
         end
       end
 
-      if obj&.has_text_body?
+      if obj.has_text_body?
         obj.text_body = obj.output
       end
       obj
