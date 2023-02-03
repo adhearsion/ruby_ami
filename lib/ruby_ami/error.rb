@@ -39,7 +39,7 @@ module RubyAMI
     end
 
     def inspect
-      "#<#{self.class} #{[:message, :headers].map { |c| "#{c}=#{self.__send__(c).inspect rescue nil}" }.compact * ', '}>"
+      "#<#{self.class} #{[:message, :headers, :text_body].map { |c| "#{c}=#{self.__send__(c).inspect rescue nil}" }.compact * ', '}>"
     end
   end
 end # RubyAMI
