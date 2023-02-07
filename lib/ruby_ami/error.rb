@@ -1,20 +1,14 @@
 # encoding: utf-8
 module RubyAMI
   class Error < StandardError
-    attr_accessor :message, :action, :text_body
+    attr_accessor :message, :action
 
     def initialize(headers = {})
       @headers = headers
     end
 
     def text_body
-      if @text_body
-        @text_body
-      elsif output
-        output
-      else
-        nil
-      end
+      output
     end
 
     def has_text_body?

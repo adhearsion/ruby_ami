@@ -131,15 +131,7 @@ module RubyAMI
 
     def populate_message_body(obj, raw)
       while raw.slice! KEYVALUEPAIR
-        if obj[$1].nil?
-          obj[$1] = $2
-        else
-          obj[$1] = obj[$1] + "\r\n#{$2}"
-        end
-      end
-
-      if obj.has_text_body?
-        obj.text_body = obj.output
+        obj[$1] = [obj[$1], $2].compact.join("\r\n")
       end
       obj
     end

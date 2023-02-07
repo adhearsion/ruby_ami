@@ -21,13 +21,7 @@ module RubyAMI
     end
 
     def text_body
-      if @text_body
-        @text_body
-      elsif output
-        output
-      else
-        nil
-      end
+      @text_body || output
     end
 
     def has_text_body?
