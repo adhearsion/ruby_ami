@@ -22,9 +22,9 @@ module RubyAMI
 
     finalizer :finalize
 
-    def initialize(host, port, username, password, event_callback, logger = Logger, timeout = 0)
+    def initialize(host, port, username, password, event_callback, logger = Logger, timeout = 0, event_mask = 'On')
       super()
-      @host, @port, @username, @password, @event_callback, @logger, @timeout = host, port, username, password, event_callback, logger, timeout
+      @host, @port, @username, @password, @event_callback, @logger, @timeout, @event_mask = host, port, username, password, event_callback, logger, timeout, event_mask
       logger.debug "Starting up..."
       @lexer = Lexer.new self
       @sent_actions   = {}
@@ -54,7 +54,7 @@ module RubyAMI
     def post_init
       @state = :started
       fire_event Connected.new
-      login @username, @password if @username && @password
+      login(@username, @password, @event_mask) if @username && @password
     end
 
     def send_data(data)
@@ -105,7 +105,7 @@ module RubyAMI
 
     private
 
-    def login(username, password, event_mask = 'On')
+    def login(username, password, event_mask)
       dispatch_action 'Login',
         'Username' => username,
         'Secret'   => password,

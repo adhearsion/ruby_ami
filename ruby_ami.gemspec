@@ -20,6 +20,7 @@ Gem::Specification.new do |s|
 
   s.add_runtime_dependency %q<celluloid-io>, ["~> 0.13"]
   s.add_runtime_dependency %q<celluloid>, ["~> 0.15.2"]
+  s.add_runtime_dependency %q<connection_pool>, ["~> 1.0"]
 
   s.add_development_dependency %q<bundler>, ["~> 1.0"]
   s.add_development_dependency %q<rspec>, ["~> 2.5"]

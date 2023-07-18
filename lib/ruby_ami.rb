@@ -23,5 +23,6 @@ end
   lexer
   response
   stream
+  pooled_stream
   version
 }.each { |f| require "ruby_ami/#{f}" }
